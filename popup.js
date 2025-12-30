@@ -238,6 +238,16 @@ function storeSelectedLeague(leagueId) {
   chrome.storage.local.set({ leagueId });
 }
 
+function storePageSize(pageSize) {
+  chrome.storage.local.set({ pageSize });
+}
+
+function loadPageSize() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["pageSize"], (data) => resolve(data.pageSize || null));
+  });
+}
+
 function loadSelectedLeague() {
   return new Promise((resolve) => {
     chrome.storage.local.get(["leagueId"], (data) => resolve(data.leagueId || null));
@@ -526,6 +536,10 @@ async function init() {
     if (stored && leagues.some((league) => league.id === stored)) {
       leagueSelect.value = stored;
     }
+    const storedPageSize = await loadPageSize();
+    if (storedPageSize) {
+      pageSizeSelect.value = String(storedPageSize);
+    }
   } catch (error) {
     showModal("エラー", "リーグ一覧の取得に失敗しました。");
   }
@@ -558,6 +572,7 @@ csvExportButton.addEventListener("click", () => {
   });
 
   pageSizeSelect.addEventListener("change", () => {
+    storePageSize(pageSizeSelect.value);
     currentPage = 1;
     renderTable(allRecords);
   });
