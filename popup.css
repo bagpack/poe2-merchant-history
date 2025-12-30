@@ -139,6 +139,10 @@ button:disabled {
   align-items: center;
 }
 
+#csv-export {
+  white-space: nowrap;
+}
+
 .table-wrapper {
   overflow-x: auto;
   border: 1px solid var(--border);

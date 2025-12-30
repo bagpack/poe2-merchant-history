@@ -1,4 +1,4 @@
-import { openLeagueDb, requestToPromise } from "./shared.js";
+import { openLeagueDb, requestToPromise, toLeagueKey } from "./shared.js";
 
 const leagueSelect = document.getElementById("league-select");
 const refreshButton = document.getElementById("refresh-btn");
@@ -6,6 +6,7 @@ const totalsContainer = document.getElementById("totals");
 const historyBody = document.getElementById("history-body");
 const searchInput = document.getElementById("search-input");
 const pageSizeSelect = document.getElementById("page-size");
+const csvExportButton = document.getElementById("csv-export");
 const prevPageButton = document.getElementById("prev-page");
 const nextPageButton = document.getElementById("next-page");
 const pageInfo = document.getElementById("page-info");
@@ -254,6 +255,48 @@ function formatDateKey(isoString) {
   return `${year}-${month}-${day}`;
 }
 
+function buildCsv(records) {
+  const header = ["日時", "アイテム名", "通貨", "個数"];
+  const rows = records.map((record) => [
+    formatDateTime(record.time),
+    formatItemName(record),
+    record.currency ?? "",
+    record.amount ?? "",
+  ]);
+  const lines = [header, ...rows].map((row) =>
+    row.map((value) => csvEscape(String(value ?? ""))).join(",")
+  );
+  return "\ufeff" + lines.join("\n");
+}
+
+function csvEscape(value) {
+  if (value.includes('"') || value.includes(",") || value.includes("\n")) {
+    return '"' + value.replace(/"/g, '""') + '"';
+  }
+  return value;
+}
+
+function buildCsvFilename(leagueId) {
+  const key = toLeagueKey(leagueId);
+  const date = new Date();
+  const yyyy = date.getFullYear();
+  const mm = `${date.getMonth() + 1}`.padStart(2, "0");
+  const dd = `${date.getDate()}`.padStart(2, "0");
+  return `merchant-history_${key}_${yyyy}-${mm}-${dd}.csv`;
+}
+
+function downloadCsv(csvText, filename) {
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function buildCurrencyOrder(records) {
   const seen = new Set(currencyOrder);
   const extra = [];
@@ -492,6 +535,20 @@ async function init() {
   });
 
   refreshButton.addEventListener("click", handleUpdate);
+
+csvExportButton.addEventListener("click", () => {
+  if (!leagueSelect.value) {
+    showModal("エラー", "リーグを選択してください。");
+    return;
+  }
+  if (!allRecords.length) {
+    showModal("エラー", "エクスポートするデータがありません。");
+    return;
+  }
+  const csvText = buildCsv(allRecords);
+  const filename = buildCsvFilename(leagueSelect.value);
+  downloadCsv(csvText, filename);
+});
 
   searchInput.addEventListener("input", () => {
     currentPage = 1;
