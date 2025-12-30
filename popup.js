@@ -85,14 +85,16 @@ function showDetail(record) {
   detailBody.appendChild(renderDetailBlock("基本情報", [
     renderDetailRow("icon", detail.icon),
     renderDetailText(`typeLine: ${detail.typeLine || ""}`),
-    renderDetailText(`baseType: ${detail.baseType || ""}`),
     renderDetailText(`rarity: ${detail.rarity || ""}`),
+    renderDetailText(`sockets: ${detail.sockets ? detail.sockets.length : 0}`),
     renderDetailText(`ilvl: ${detail.ilvl ?? ""}`),
   ]));
 
   detailBody.appendChild(renderListBlock("properties", detail.properties));
   detailBody.appendChild(renderListBlock("requirements", detail.requirements));
+  detailBody.appendChild(renderListBlock("runeMods", detail.runeMods));
   detailBody.appendChild(renderListBlock("explicitMods", detail.explicitMods));
+  detailBody.appendChild(renderListBlock("desecratedMods", detail.desecratedMods));
 
   detailModal.classList.remove("hidden");
 }
