@@ -1,0 +1,77 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f1ea;
+  --card: #ffffff;
+  --ink: #1c1b19;
+  --muted: #6f665d;
+  --accent: #b64b2a;
+  --border: #e1d6c7;
+  --shadow: 0 12px 24px rgba(23, 19, 14, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Iowan Old Style", "Palatino", "Times New Roman", serif;
+  color: var(--ink);
+  background: radial-gradient(circle at top, #f8f2e8, #efe5d7 55%, #e9dccb);
+  padding: 24px;
+}
+
+.options {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 8px 0;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-top: 16px;
+}
+
+.cookie-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cookie-row:last-child {
+  border-bottom: none;
+}
+
+.status-ok {
+  color: #2f6f3b;
+  font-weight: 600;
+}
+
+.status-missing {
+  color: #9b2b1a;
+  font-weight: 600;
+}
+
+button {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}

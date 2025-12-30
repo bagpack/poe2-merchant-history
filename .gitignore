@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+
+.agent/
+
+# build artifacts
+*.log
+
+# extension bundles
+*.zip
+
+# runtime data
+*.sqlite
+*.db
+
+# environment
+.env
