@@ -129,6 +129,15 @@ async function saveRecords(leagueId, records) {
   return addedCount;
 }
 
+async function countRecords(leagueId) {
+  const db = await openLeagueDb(leagueId);
+  const tx = db.transaction("trade_history", "readonly");
+  const store = tx.objectStore("trade_history");
+  const count = await requestToPromise(store.count());
+  await transactionComplete(tx);
+  return count;
+}
+
 async function addRecord(store, record) {
   return new Promise((resolve, reject) => {
     const request = store.add(record);
@@ -150,7 +159,8 @@ async function updateHistory(leagueId) {
   const apiResponse = await fetchHistory(leagueId);
   const records = normalizeHistory(apiResponse, leagueId);
   const addedCount = await saveRecords(leagueId, records);
-  return { addedCount, fetchedCount: records.length };
+  const totalCount = await countRecords(leagueId);
+  return { addedCount, fetchedCount: records.length, totalCount };
 }
 
 async function enforceRateLimit() {

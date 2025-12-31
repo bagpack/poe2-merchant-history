@@ -507,7 +507,8 @@ async function handleUpdate() {
     await refreshData(leagueId);
     const added = response.result.addedCount ?? 0;
     const fetched = response.result.fetchedCount ?? 0;
-    showModal("更新完了", `取得 ${fetched} 件 / 追加 ${added} 件`);
+    const total = response.result.totalCount ?? fetched;
+    showModal("更新完了", `総取得 ${total} 件 / 追加 ${added} 件`);
   } catch (error) {
     showModal("エラー", "更新に失敗しました。");
   } finally {
