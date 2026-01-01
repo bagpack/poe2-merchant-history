@@ -91,6 +91,9 @@ function showDetail(record) {
   ]));
 
   detailBody.appendChild(renderListBlock("properties", detail.properties));
+  if (detail.logbookMods && detail.logbookMods.length > 0) {
+    detailBody.appendChild(renderListBlock("logbookMods", detail.logbookMods));
+  }
   detailBody.appendChild(renderListBlock("requirements", detail.requirements));
   detailBody.appendChild(renderListBlock("runeMods", detail.runeMods));
   detailBody.appendChild(renderListBlock("explicitMods", detail.explicitMods));
@@ -154,6 +157,27 @@ function renderListBlock(title, items) {
       return;
     }
     if (!item || !item.name) {
+      return;
+    }
+    if (title === "logbookMods") {
+      const group = document.createElement("div");
+      group.className = "logbook-group";
+      const nameLine = document.createElement("div");
+      nameLine.className = "logbook-name";
+      nameLine.textContent = item.name;
+      group.appendChild(nameLine);
+      if (Array.isArray(item.mods) && item.mods.length > 0) {
+        item.mods.forEach((mod) => {
+          if (!mod) {
+            return;
+          }
+          const modLine = document.createElement("div");
+          modLine.className = "logbook-mod";
+          modLine.textContent = mod;
+          group.appendChild(modLine);
+        });
+      }
+      block.appendChild(group);
       return;
     }
     const values = (item.values || [])

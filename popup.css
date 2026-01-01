@@ -238,6 +238,25 @@ tr:hover {
   align-items: center;
 }
 
+.logbook-group {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.logbook-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.logbook-mod {
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+  color: var(--muted);
+}
+
 .detail-row img {
   width: auto;
   height: 64px;
