@@ -1,4 +1,9 @@
-import { openLeagueDb, requestToPromise, transactionComplete } from "./shared.js";
+import {
+  openLeagueDb,
+  requestToPromise,
+  transactionComplete,
+} from "./shared.js";
+import { getAcceptLanguage, getHostForLanguage } from "./i18n.js";
 
 const REQUIRED_COOKIES = ["POESESSID"];
 
@@ -11,7 +16,7 @@ function makeError(code, message, meta) {
 
 function normalizeHistory(apiResponse, leagueId) {
   if (!apiResponse || !Array.isArray(apiResponse.result)) {
-    throw makeError("FETCH_FAILED", "resultが取得できません。", null);
+    throw makeError("FETCH_FAILED", "Result is missing.", null);
   }
 
   const records = [];
@@ -28,7 +33,7 @@ function normalizeHistory(apiResponse, leagueId) {
     }
 
     if (item.league !== leagueId) {
-      throw makeError("LEAGUE_MISMATCH", "リーグが一致しません。", {
+      throw makeError("LEAGUE_MISMATCH", "League mismatch.", {
         expectedLeague: leagueId,
         actualLeague: item.league,
       });
@@ -55,11 +60,12 @@ function normalizeHistory(apiResponse, leagueId) {
   return records;
 }
 
-async function getCookie(name) {
+async function getCookie(name, language) {
+  const host = getHostForLanguage(language);
   return new Promise((resolve) => {
     chrome.cookies.get(
       {
-        url: "https://jp.pathofexile.com",
+        url: host,
         name,
       },
       (cookie) => resolve(cookie || null)
@@ -67,31 +73,34 @@ async function getCookie(name) {
   });
 }
 
-async function ensureAuthCookies() {
-  const results = await Promise.all(REQUIRED_COOKIES.map((name) => getCookie(name)));
+async function ensureAuthCookies(language) {
+  const results = await Promise.all(
+    REQUIRED_COOKIES.map((name) => getCookie(name, language))
+  );
   const missing = REQUIRED_COOKIES.filter((_, index) => !results[index]);
   if (missing.length > 0) {
-    throw makeError("AUTH_EXPIRED", "ログイン情報の有効期限が切れています。", {
+    throw makeError("AUTH_EXPIRED", "Login expired.", {
       missing,
     });
   }
 }
 
-async function fetchHistory(leagueId) {
-  const url = `https://jp.pathofexile.com/api/trade2/history/${encodeURIComponent(leagueId)}`;
+async function fetchHistory(leagueId, language) {
+  const host = getHostForLanguage(language);
+  const url = `${host}/api/trade2/history/${encodeURIComponent(leagueId)}`;
   const response = await fetch(url, {
     credentials: "include",
     headers: {
       accept: "*/*",
-      "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+      "accept-language": getAcceptLanguage(language),
       "x-requested-with": "XMLHttpRequest",
     },
-    referrer: "https://jp.pathofexile.com/trade2/history",
+    referrer: `${host}/trade2/history`,
     referrerPolicy: "no-referrer-when-downgrade",
   });
 
   if (!response.ok) {
-    throw makeError("FETCH_FAILED", "履歴の取得に失敗しました。", {
+    throw makeError("FETCH_FAILED", "Failed to fetch history.", {
       status: response.status,
     });
   }
@@ -99,12 +108,12 @@ async function fetchHistory(leagueId) {
   return response.json();
 }
 
-async function saveRecords(leagueId, records) {
+async function saveRecords(leagueId, language, records) {
   if (records.length === 0) {
     return 0;
   }
 
-  const db = await openLeagueDb(leagueId);
+  const db = await openLeagueDb(leagueId, language);
   const tx = db.transaction("trade_history", "readwrite");
   const store = tx.objectStore("trade_history");
 
@@ -129,8 +138,8 @@ async function saveRecords(leagueId, records) {
   return addedCount;
 }
 
-async function countRecords(leagueId) {
-  const db = await openLeagueDb(leagueId);
+async function countRecords(leagueId, language) {
+  const db = await openLeagueDb(leagueId, language);
   const tx = db.transaction("trade_history", "readonly");
   const store = tx.objectStore("trade_history");
   const count = await requestToPromise(store.count());
@@ -153,13 +162,13 @@ async function addRecord(store, record) {
   });
 }
 
-async function updateHistory(leagueId) {
+async function updateHistory(leagueId, language) {
   await enforceRateLimit();
-  await ensureAuthCookies();
-  const apiResponse = await fetchHistory(leagueId);
+  await ensureAuthCookies(language);
+  const apiResponse = await fetchHistory(leagueId, language);
   const records = normalizeHistory(apiResponse, leagueId);
-  const addedCount = await saveRecords(leagueId, records);
-  const totalCount = await countRecords(leagueId);
+  const addedCount = await saveRecords(leagueId, language, records);
+  const totalCount = await countRecords(leagueId, language);
   return { addedCount, fetchedCount: records.length, totalCount };
 }
 
@@ -178,7 +187,7 @@ async function enforceRateLimit() {
     const remainingSec = Math.ceil(remainingMs / 1000);
     throw makeError(
       "RATE_LIMIT",
-      `更新は1分に1回までです。あと${remainingSec}秒お待ちください。`,
+      `Update limited. Wait ${remainingSec} seconds.`,
       { remainingSec }
     );
   }
@@ -188,7 +197,7 @@ async function enforceRateLimit() {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "updateHistory") {
-    updateHistory(message.leagueId)
+    updateHistory(message.leagueId, message.language)
       .then((result) => {
         sendResponse({ ok: true, result });
       })
@@ -197,7 +206,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           ok: false,
           error: {
             code: error.code || "UNKNOWN",
-            message: error.message || "予期しないエラーが発生しました。",
+            message: error.message || "Unexpected error.",
             meta: error.meta || null,
           },
         });
@@ -205,7 +214,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  sendResponse({ ok: false, error: { code: "UNKNOWN", message: "不明なリクエストです。" } });
+  sendResponse({ ok: false, error: { code: "UNKNOWN", message: "Unknown request." } });
   return false;
 });
 

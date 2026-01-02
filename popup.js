@@ -1,7 +1,22 @@
-import { openLeagueDb, requestToPromise, toLeagueKey } from "./shared.js";
+import {
+  migrateLegacyDbIfNeeded,
+  openLeagueDb,
+  requestToPromise,
+  toLeagueKey,
+} from "./shared.js";
+import {
+  applyTranslations,
+  getHostForLanguage,
+  getLocaleForLanguage,
+  loadUiLanguage,
+  normalizeLanguage,
+  saveUiLanguage,
+  t,
+} from "./i18n.js";
 
 const leagueSelect = document.getElementById("league-select");
 const refreshButton = document.getElementById("refresh-btn");
+const languageSelect = document.getElementById("language-select");
 const totalsContainer = document.getElementById("totals");
 const historyBody = document.getElementById("history-body");
 const searchInput = document.getElementById("search-input");
@@ -54,17 +69,21 @@ const fallbackColors = ["#4a2c0f", "#b64b2a", "#6e5d4a", "#c58f4f"];
 let chartInstance = null;
 let allRecords = [];
 let currentPage = 1;
+let currentLanguage = "en";
 
 const errorMessages = {
   LEAGUE_MISMATCH: (meta) =>
-    `リーグが一致しません。期待: ${meta?.expectedLeague ?? ""} / 実際: ${meta?.actualLeague ?? ""}`,
+    t(currentLanguage, "errorLeagueMismatch", {
+      expected: meta?.expectedLeague ?? "",
+      actual: meta?.actualLeague ?? "",
+    }),
   DUPLICATE_ID: (meta) =>
-    `重複IDが検出されました。ID: ${meta?.itemId ?? ""}（処理を停止しました）`,
-  FETCH_FAILED: () => "履歴の取得に失敗しました。時間をおいて再試行してください。",
-  AUTH_EXPIRED: () => "ログイン情報の有効期限が切れています。再ログインしてください。",
+    t(currentLanguage, "errorDuplicateId", { itemId: meta?.itemId ?? "" }),
+  FETCH_FAILED: () => t(currentLanguage, "errorFetchFailed"),
+  AUTH_EXPIRED: () => t(currentLanguage, "errorAuthExpired"),
   RATE_LIMIT: (meta) =>
-    `更新は1分に1回までです。あと${meta?.remainingSec ?? ""}秒お待ちください。`,
-  UNKNOWN: () => "予期しないエラーが発生しました。",
+    t(currentLanguage, "errorRateLimit", { seconds: meta?.remainingSec ?? "" }),
+  UNKNOWN: () => t(currentLanguage, "errorUnknown"),
 };
 
 function showModal(title, message) {
@@ -82,22 +101,49 @@ function showDetail(record) {
   detailBody.innerHTML = "";
 
   const detail = record.details_json || {};
-  detailBody.appendChild(renderDetailBlock("基本情報", [
-    renderDetailRow("icon", detail.icon),
-    renderDetailText(`typeLine: ${detail.typeLine || ""}`),
-    renderDetailText(`rarity: ${detail.rarity || ""}`),
-    renderDetailText(`sockets: ${detail.sockets ? detail.sockets.length : 0}`),
-    renderDetailText(`ilvl: ${detail.ilvl ?? ""}`),
-  ]));
+  detailBody.appendChild(
+    renderDetailBlock(t(currentLanguage, "detailBasicInfo"), [
+      renderDetailRow("icon", detail.icon),
+      renderDetailText(
+        `${t(currentLanguage, "detailTypeLine")}: ${detail.typeLine || ""}`
+      ),
+      renderDetailText(
+        `${t(currentLanguage, "detailRarity")}: ${detail.rarity || ""}`
+      ),
+      renderDetailText(
+        `${t(currentLanguage, "detailSockets")}: ${
+          detail.sockets ? detail.sockets.length : 0
+        }`
+      ),
+      renderDetailText(
+        `${t(currentLanguage, "detailIlvl")}: ${detail.ilvl ?? ""}`
+      ),
+    ])
+  );
 
-  detailBody.appendChild(renderListBlock("properties", detail.properties));
+  detailBody.appendChild(
+    renderListBlock(t(currentLanguage, "detailProperties"), detail.properties)
+  );
   if (detail.logbookMods && detail.logbookMods.length > 0) {
-    detailBody.appendChild(renderListBlock("logbookMods", detail.logbookMods));
+    detailBody.appendChild(
+      renderListBlock(t(currentLanguage, "detailLogbookMods"), detail.logbookMods)
+    );
   }
-  detailBody.appendChild(renderListBlock("requirements", detail.requirements));
-  detailBody.appendChild(renderListBlock("runeMods", detail.runeMods));
-  detailBody.appendChild(renderListBlock("explicitMods", detail.explicitMods));
-  detailBody.appendChild(renderListBlock("desecratedMods", detail.desecratedMods));
+  detailBody.appendChild(
+    renderListBlock(t(currentLanguage, "detailRequirements"), detail.requirements)
+  );
+  detailBody.appendChild(
+    renderListBlock(t(currentLanguage, "detailRuneMods"), detail.runeMods)
+  );
+  detailBody.appendChild(
+    renderListBlock(t(currentLanguage, "detailExplicitMods"), detail.explicitMods)
+  );
+  detailBody.appendChild(
+    renderListBlock(
+      t(currentLanguage, "detailDesecratedMods"),
+      detail.desecratedMods
+    )
+  );
 
   detailModal.classList.remove("hidden");
 }
@@ -147,7 +193,7 @@ function renderListBlock(title, items) {
   block.appendChild(heading);
 
   if (!items || items.length === 0) {
-    block.appendChild(renderDetailText("なし"));
+    block.appendChild(renderDetailText(t(currentLanguage, "detailNone")));
     return block;
   }
 
@@ -159,7 +205,7 @@ function renderListBlock(title, items) {
     if (!item || !item.name) {
       return;
     }
-    if (title === "logbookMods") {
+    if (title === t(currentLanguage, "detailLogbookMods")) {
       const group = document.createElement("div");
       group.className = "logbook-group";
       const nameLine = document.createElement("div");
@@ -189,12 +235,13 @@ function renderListBlock(title, items) {
   return block;
 }
 
-async function loadLeagues() {
-  const response = await fetch("https://jp.pathofexile.com/trade2/history", {
+async function loadLeagues(language) {
+  const host = getHostForLanguage(language);
+  const response = await fetch(`${host}/trade2/history`, {
     credentials: "include",
   });
   if (!response.ok) {
-    throw new Error("リーグ一覧の取得に失敗しました。");
+    throw new Error(t(currentLanguage, "modalLeagueFetchFailed"));
   }
   const html = await response.text();
   const config = extractTradeConfig(html);
@@ -209,7 +256,7 @@ function extractTradeConfig(html) {
     .find((text) => text.includes("require([\"trade\"]") && text.includes("leagues"));
 
   if (!target) {
-    throw new Error("リーグ設定が見つかりません。");
+    throw new Error(t(currentLanguage, "modalLeagueFetchFailed"));
   }
 
   const configText = extractObjectLiteral(target, "t(");
@@ -219,11 +266,11 @@ function extractTradeConfig(html) {
 function extractObjectLiteral(source, marker) {
   const markerIndex = source.indexOf(marker);
   if (markerIndex === -1) {
-    throw new Error("設定JSONの開始位置が見つかりません。");
+    throw new Error(t(currentLanguage, "modalLeagueFetchFailed"));
   }
   let index = source.indexOf("{", markerIndex);
   if (index === -1) {
-    throw new Error("設定JSONが見つかりません。");
+    throw new Error(t(currentLanguage, "modalLeagueFetchFailed"));
   }
 
   let depth = 0;
@@ -242,7 +289,7 @@ function extractObjectLiteral(source, marker) {
   }
 
   if (endIndex === -1) {
-    throw new Error("設定JSONの終端が見つかりません。");
+    throw new Error(t(currentLanguage, "modalLeagueFetchFailed"));
   }
 
   return source.slice(source.indexOf("{", markerIndex), endIndex);
@@ -280,7 +327,7 @@ function loadSelectedLeague() {
 
 function formatDateTime(isoString) {
   const date = new Date(isoString);
-  return date.toLocaleString("ja-JP");
+  return date.toLocaleString(getLocaleForLanguage(currentLanguage));
 }
 
 function formatDateKey(isoString) {
@@ -292,7 +339,12 @@ function formatDateKey(isoString) {
 }
 
 function buildCsv(records) {
-  const header = ["日時", "アイテム名", "通貨", "個数"];
+  const header = [
+    t(currentLanguage, "csvHeaderDate"),
+    t(currentLanguage, "csvHeaderItem"),
+    t(currentLanguage, "csvHeaderCurrency"),
+    t(currentLanguage, "csvHeaderAmount"),
+  ];
   const rows = records.map((record) => [
     formatDateTime(record.time),
     formatItemName(record),
@@ -348,7 +400,7 @@ function buildCurrencyOrder(records) {
 function renderTotals(records) {
   totalsContainer.innerHTML = "";
   if (records.length === 0) {
-    totalsContainer.textContent = "データがありません。";
+    totalsContainer.textContent = t(currentLanguage, "totalsEmpty");
     return;
   }
 
@@ -485,7 +537,7 @@ function renderTable(records) {
 }
 
 async function loadRecords(leagueId) {
-  const db = await openLeagueDb(leagueId);
+  const db = await openLeagueDb(leagueId, currentLanguage);
   const tx = db.transaction("trade_history", "readonly");
   const store = tx.objectStore("trade_history");
   const records = await requestToPromise(store.getAll());
@@ -521,23 +573,36 @@ async function handleUpdate() {
     const response = await chrome.runtime.sendMessage({
       type: "updateHistory",
       leagueId,
+      language: currentLanguage,
     });
     if (!response?.ok) {
       const code = response?.error?.code || "UNKNOWN";
       const messageBuilder = errorMessages[code] || errorMessages.UNKNOWN;
-      showModal("エラー", messageBuilder(response?.error?.meta));
+      showModal(t(currentLanguage, "modalErrorTitle"), messageBuilder(response?.error?.meta));
       return;
     }
     await refreshData(leagueId);
     const added = response.result.addedCount ?? 0;
     const fetched = response.result.fetchedCount ?? 0;
     const total = response.result.totalCount ?? fetched;
-    showModal("更新完了", `総取得 ${total} 件 / 追加 ${added} 件`);
+    showModal(
+      t(currentLanguage, "modalUpdatedTitle"),
+      t(currentLanguage, "updateResult", { total, added })
+    );
   } catch (error) {
-    showModal("エラー", "更新に失敗しました。");
+    showModal(
+      t(currentLanguage, "modalErrorTitle"),
+      t(currentLanguage, "modalUpdateFailed")
+    );
   } finally {
     refreshButton.disabled = false;
   }
+}
+
+function applyLanguage(language) {
+  currentLanguage = normalizeLanguage(language);
+  document.documentElement.lang = currentLanguage;
+  applyTranslations(document, currentLanguage);
 }
 
 async function init() {
@@ -555,7 +620,11 @@ async function init() {
   });
 
   try {
-    const leagues = await loadLeagues();
+    const storedLanguage = await loadUiLanguage();
+    languageSelect.value = storedLanguage;
+    applyLanguage(storedLanguage);
+
+    const leagues = await loadLeagues(currentLanguage);
     setOptions(leagueSelect, leagues);
     const stored = await loadSelectedLeague();
     if (stored && leagues.some((league) => league.id === stored)) {
@@ -566,30 +635,64 @@ async function init() {
       pageSizeSelect.value = String(storedPageSize);
     }
   } catch (error) {
-    showModal("エラー", "リーグ一覧の取得に失敗しました。");
+    showModal(
+      t(currentLanguage, "modalErrorTitle"),
+      t(currentLanguage, "modalLeagueFetchFailed")
+    );
   }
 
   leagueSelect.addEventListener("change", async () => {
     storeSelectedLeague(leagueSelect.value);
     currentPage = 1;
+    await migrateLegacyDbIfNeeded(leagueSelect.value);
     await refreshData(leagueSelect.value);
   });
 
   refreshButton.addEventListener("click", handleUpdate);
 
-csvExportButton.addEventListener("click", () => {
-  if (!leagueSelect.value) {
-    showModal("エラー", "リーグを選択してください。");
-    return;
-  }
-  if (!allRecords.length) {
-    showModal("エラー", "エクスポートするデータがありません。");
-    return;
-  }
-  const csvText = buildCsv(allRecords);
-  const filename = buildCsvFilename(leagueSelect.value);
-  downloadCsv(csvText, filename);
-});
+  languageSelect.addEventListener("change", async () => {
+    const selected = languageSelect.value;
+    await saveUiLanguage(selected);
+    applyLanguage(selected);
+    currentPage = 1;
+    try {
+      const leagues = await loadLeagues(currentLanguage);
+      setOptions(leagueSelect, leagues);
+      const stored = await loadSelectedLeague();
+      if (stored && leagues.some((league) => league.id === stored)) {
+        leagueSelect.value = stored;
+      }
+    } catch (error) {
+      showModal(
+        t(currentLanguage, "modalErrorTitle"),
+        t(currentLanguage, "modalLeagueFetchFailed")
+      );
+    }
+    if (leagueSelect.value) {
+      await migrateLegacyDbIfNeeded(leagueSelect.value);
+      await refreshData(leagueSelect.value);
+    }
+  });
+
+  csvExportButton.addEventListener("click", () => {
+    if (!leagueSelect.value) {
+      showModal(
+        t(currentLanguage, "modalErrorTitle"),
+        t(currentLanguage, "modalSelectLeague")
+      );
+      return;
+    }
+    if (!allRecords.length) {
+      showModal(
+        t(currentLanguage, "modalErrorTitle"),
+        t(currentLanguage, "modalNoExportData")
+      );
+      return;
+    }
+    const csvText = buildCsv(allRecords);
+    const filename = buildCsvFilename(leagueSelect.value);
+    downloadCsv(csvText, filename);
+  });
 
   searchInput.addEventListener("input", () => {
     currentPage = 1;
@@ -613,6 +716,7 @@ csvExportButton.addEventListener("click", () => {
   });
 
   if (leagueSelect.value) {
+    await migrateLegacyDbIfNeeded(leagueSelect.value);
     await refreshData(leagueSelect.value);
   }
 }

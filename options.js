@@ -1,13 +1,25 @@
+import {
+  applyTranslations,
+  getHostForLanguage,
+  getLocaleForLanguage,
+  loadUiLanguage,
+  normalizeLanguage,
+  t,
+} from "./i18n.js";
+
 const cookieList = document.getElementById("cookie-list");
 const refreshButton = document.getElementById("refresh-cookies");
 
 const cookieNames = ["POESESSID"];
 
+let currentLanguage = "en";
+
 function getCookie(name) {
+  const host = getHostForLanguage(currentLanguage);
   return new Promise((resolve) => {
     chrome.cookies.get(
       {
-        url: "https://jp.pathofexile.com",
+        url: host,
         name,
       },
       (cookie) => resolve(cookie || null)
@@ -20,7 +32,7 @@ function formatExpiration(cookie) {
     return "-";
   }
   const date = new Date(cookie.expirationDate * 1000);
-  return date.toLocaleString("ja-JP");
+  return date.toLocaleString(getLocaleForLanguage(currentLanguage));
 }
 
 function renderCookies(cookies) {
@@ -35,10 +47,12 @@ function renderCookies(cookies) {
     const status = document.createElement("div");
     if (cookie.value) {
       status.className = "status-ok";
-      status.textContent = `取得済み (期限: ${formatExpiration(cookie)})`;
+      status.textContent = t(currentLanguage, "cookieStatusOk", {
+        date: formatExpiration(cookie),
+      });
     } else {
       status.className = "status-missing";
-      status.textContent = "未取得";
+      status.textContent = t(currentLanguage, "cookieStatusMissing");
     }
 
     row.appendChild(name);
@@ -59,4 +73,22 @@ async function loadCookies() {
 
 refreshButton.addEventListener("click", loadCookies);
 
-loadCookies();
+async function init() {
+  const storedLanguage = await loadUiLanguage();
+  currentLanguage = normalizeLanguage(storedLanguage);
+  document.documentElement.lang = currentLanguage;
+  applyTranslations(document, currentLanguage);
+  loadCookies();
+}
+
+init();
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !changes.uiLanguage) {
+    return;
+  }
+  currentLanguage = normalizeLanguage(changes.uiLanguage.newValue);
+  document.documentElement.lang = currentLanguage;
+  applyTranslations(document, currentLanguage);
+  loadCookies();
+});

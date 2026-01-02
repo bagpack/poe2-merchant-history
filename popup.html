@@ -1,71 +1,83 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PoE2 Merchant History</title>
+    <title data-i18n="appTitle">PoE2 Merchant History</title>
     <link rel="stylesheet" href="popup.css" />
     <script src="chart.umd.min.js"></script>
   </head>
   <body>
     <header class="app-header">
       <div>
-        <h1>PoE2 Merchant History</h1>
-        <p>リーグ別に履歴を確認</p>
+        <h1 data-i18n="appTitle">PoE2 Merchant History</h1>
+        <p data-i18n="appSubtitle">リーグ別に履歴を確認</p>
       </div>
     </header>
 
     <section class="controls">
       <label>
-        リーグ
+        <span data-i18n="labelLeague">リーグ</span>
         <select id="league-select"></select>
       </label>
-      <button id="refresh-btn">更新</button>
+      <label>
+        <span data-i18n="labelLanguage">言語</span>
+        <select id="language-select">
+          <option value="en" data-i18n="languageEnglish">English</option>
+          <option value="ja" data-i18n="languageJapanese">日本語</option>
+        </select>
+      </label>
+      <button id="refresh-btn" data-i18n="buttonRefresh">更新</button>
     </section>
 
     <section class="summary">
-      <h2>総計</h2>
+      <h2 data-i18n="summaryTitle">総計</h2>
       <div id="totals" class="totals"></div>
     </section>
 
     <section class="chart-section">
       <div class="chart-header">
-        <h2>売上推移</h2>
-        <span class="chart-note">日次・通貨別</span>
+        <h2 data-i18n="chartTitle">売上推移</h2>
+        <span class="chart-note" data-i18n="chartNote">日次・通貨別</span>
       </div>
       <canvas id="sales-chart" height="160"></canvas>
     </section>
 
     <section class="table-section">
       <div class="table-header">
-        <h2>履歴一覧</h2>
+        <h2 data-i18n="tableTitle">履歴一覧</h2>
         <div class="table-controls">
-          <input id="search-input" type="search" placeholder="アイテム名で検索" />
+          <input
+            id="search-input"
+            type="search"
+            placeholder="アイテム名で検索"
+            data-i18n-placeholder="searchPlaceholder"
+          />
           <select id="page-size">
             <option value="50">50</option>
             <option value="100">100</option>
             <option value="200">200</option>
           </select>
-          <button id="csv-export">CSV出力</button>
+          <button id="csv-export" data-i18n="buttonCsv">CSV出力</button>
         </div>
       </div>
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th>日時</th>
-              <th>アイテム名</th>
-              <th>通貨</th>
-              <th>個数</th>
+              <th data-i18n="tableHeaderDate">日時</th>
+              <th data-i18n="tableHeaderItem">アイテム名</th>
+              <th data-i18n="tableHeaderCurrency">通貨</th>
+              <th data-i18n="tableHeaderAmount">個数</th>
             </tr>
           </thead>
           <tbody id="history-body"></tbody>
         </table>
       </div>
       <div class="pagination">
-        <button id="prev-page">前へ</button>
+        <button id="prev-page" data-i18n="buttonPrev">前へ</button>
         <span id="page-info"></span>
-        <button id="next-page">次へ</button>
+        <button id="next-page" data-i18n="buttonNext">次へ</button>
       </div>
     </section>
 
@@ -73,7 +85,7 @@
       <div class="modal-content">
         <h3 id="modal-title"></h3>
         <p id="modal-message"></p>
-        <button id="modal-close">閉じる</button>
+        <button id="modal-close" data-i18n="modalClose">閉じる</button>
       </div>
     </div>
 
@@ -81,7 +93,7 @@
       <div class="modal-content modal-large">
         <div class="detail-header">
           <h3 id="detail-title"></h3>
-          <button id="detail-close">閉じる</button>
+          <button id="detail-close" data-i18n="detailClose">閉じる</button>
         </div>
         <div id="detail-body" class="detail-body"></div>
       </div>

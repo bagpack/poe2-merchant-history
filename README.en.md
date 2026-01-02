@@ -32,6 +32,7 @@ Chrome extension that stores Path of Exile 2 merchant sales history per league a
 
 - Requires the `jp.pathofexile.com` login cookie (POESESSID)
 - Fetching is limited to once per minute
+- The official API only returns about the latest 100 records, so periodic saves are useful
 - Data is stored per league in IndexedDB and kept indefinitely
 
 ## Screenshot

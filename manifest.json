@@ -4,7 +4,10 @@
   "version": "0.1.0",
   "description": "PoE2の売上履歴をリーグ別に保存し、グラフと表で表示します。",
   "permissions": ["storage", "cookies"],
-  "host_permissions": ["https://jp.pathofexile.com/*"],
+  "host_permissions": [
+    "https://jp.pathofexile.com/*",
+    "https://pathofexile.com/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
