@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "PoE2 Merchant History",
+  "name": "__MSG_extName__",
   "version": "0.1.0",
-  "description": "PoE2の売上履歴をリーグ別に保存し、グラフと表で表示します。",
+  "description": "__MSG_extDescription__",
   "permissions": ["storage", "cookies"],
   "host_permissions": [
     "https://jp.pathofexile.com/*",
@@ -13,9 +13,10 @@
     "type": "module"
   },
   "action": {
-    "default_title": "PoE2 Merchant History"
+    "default_title": "__MSG_extTitle__"
   },
   "options_page": "options.html",
+  "default_locale": "en",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   }
