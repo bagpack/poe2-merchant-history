@@ -1,0 +1,6 @@
+.github/
+.agent/
+chart.umd.min.js
+docs/
+icons/
+_locales/

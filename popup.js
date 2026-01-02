@@ -1,9 +1,4 @@
-import {
-  migrateLegacyDbIfNeeded,
-  openLeagueDb,
-  requestToPromise,
-  toLeagueKey,
-} from "./shared.js";
+import { migrateLegacyDbIfNeeded, openLeagueDb, requestToPromise, toLeagueKey } from "./shared.js";
 import {
   applyTranslations,
   getHostForLanguage,
@@ -77,12 +72,10 @@ const errorMessages = {
       expected: meta?.expectedLeague ?? "",
       actual: meta?.actualLeague ?? "",
     }),
-  DUPLICATE_ID: (meta) =>
-    t(currentLanguage, "errorDuplicateId", { itemId: meta?.itemId ?? "" }),
+  DUPLICATE_ID: (meta) => t(currentLanguage, "errorDuplicateId", { itemId: meta?.itemId ?? "" }),
   FETCH_FAILED: () => t(currentLanguage, "errorFetchFailed"),
   AUTH_EXPIRED: () => t(currentLanguage, "errorAuthExpired"),
-  RATE_LIMIT: (meta) =>
-    t(currentLanguage, "errorRateLimit", { seconds: meta?.remainingSec ?? "" }),
+  RATE_LIMIT: (meta) => t(currentLanguage, "errorRateLimit", { seconds: meta?.remainingSec ?? "" }),
   UNKNOWN: () => t(currentLanguage, "errorUnknown"),
 };
 
@@ -104,20 +97,12 @@ function showDetail(record) {
   detailBody.appendChild(
     renderDetailBlock(t(currentLanguage, "detailBasicInfo"), [
       renderDetailRow("icon", detail.icon),
+      renderDetailText(`${t(currentLanguage, "detailTypeLine")}: ${detail.typeLine || ""}`),
+      renderDetailText(`${t(currentLanguage, "detailRarity")}: ${detail.rarity || ""}`),
       renderDetailText(
-        `${t(currentLanguage, "detailTypeLine")}: ${detail.typeLine || ""}`
+        `${t(currentLanguage, "detailSockets")}: ${detail.sockets ? detail.sockets.length : 0}`
       ),
-      renderDetailText(
-        `${t(currentLanguage, "detailRarity")}: ${detail.rarity || ""}`
-      ),
-      renderDetailText(
-        `${t(currentLanguage, "detailSockets")}: ${
-          detail.sockets ? detail.sockets.length : 0
-        }`
-      ),
-      renderDetailText(
-        `${t(currentLanguage, "detailIlvl")}: ${detail.ilvl ?? ""}`
-      ),
+      renderDetailText(`${t(currentLanguage, "detailIlvl")}: ${detail.ilvl ?? ""}`),
     ])
   );
 
@@ -132,17 +117,12 @@ function showDetail(record) {
   detailBody.appendChild(
     renderListBlock(t(currentLanguage, "detailRequirements"), detail.requirements)
   );
-  detailBody.appendChild(
-    renderListBlock(t(currentLanguage, "detailRuneMods"), detail.runeMods)
-  );
+  detailBody.appendChild(renderListBlock(t(currentLanguage, "detailRuneMods"), detail.runeMods));
   detailBody.appendChild(
     renderListBlock(t(currentLanguage, "detailExplicitMods"), detail.explicitMods)
   );
   detailBody.appendChild(
-    renderListBlock(
-      t(currentLanguage, "detailDesecratedMods"),
-      detail.desecratedMods
-    )
+    renderListBlock(t(currentLanguage, "detailDesecratedMods"), detail.desecratedMods)
   );
 
   detailModal.classList.remove("hidden");
@@ -253,7 +233,7 @@ function extractTradeConfig(html) {
   const scripts = Array.from(doc.querySelectorAll("script"));
   const target = scripts
     .map((script) => script.textContent || "")
-    .find((text) => text.includes("require([\"trade\"]") && text.includes("leagues"));
+    .find((text) => text.includes('require(["trade"]') && text.includes("leagues"));
 
   if (!target) {
     throw new Error(t(currentLanguage, "modalLeagueFetchFailed"));
@@ -453,8 +433,7 @@ function renderChart(records) {
         return null;
       }
       const color =
-        currencyColorMap.get(currency) ||
-        fallbackColors[fallbackIndex++ % fallbackColors.length];
+        currencyColorMap.get(currency) || fallbackColors[fallbackIndex++ % fallbackColors.length];
       return {
         label: currency,
         data,
@@ -590,10 +569,7 @@ async function handleUpdate() {
       t(currentLanguage, "updateResult", { total, added })
     );
   } catch (error) {
-    showModal(
-      t(currentLanguage, "modalErrorTitle"),
-      t(currentLanguage, "modalUpdateFailed")
-    );
+    showModal(t(currentLanguage, "modalErrorTitle"), t(currentLanguage, "modalUpdateFailed"));
   } finally {
     refreshButton.disabled = false;
   }
@@ -635,10 +611,7 @@ async function init() {
       pageSizeSelect.value = String(storedPageSize);
     }
   } catch (error) {
-    showModal(
-      t(currentLanguage, "modalErrorTitle"),
-      t(currentLanguage, "modalLeagueFetchFailed")
-    );
+    showModal(t(currentLanguage, "modalErrorTitle"), t(currentLanguage, "modalLeagueFetchFailed"));
   }
 
   leagueSelect.addEventListener("change", async () => {
@@ -676,17 +649,11 @@ async function init() {
 
   csvExportButton.addEventListener("click", () => {
     if (!leagueSelect.value) {
-      showModal(
-        t(currentLanguage, "modalErrorTitle"),
-        t(currentLanguage, "modalSelectLeague")
-      );
+      showModal(t(currentLanguage, "modalErrorTitle"), t(currentLanguage, "modalSelectLeague"));
       return;
     }
     if (!allRecords.length) {
-      showModal(
-        t(currentLanguage, "modalErrorTitle"),
-        t(currentLanguage, "modalNoExportData")
-      );
+      showModal(t(currentLanguage, "modalErrorTitle"), t(currentLanguage, "modalNoExportData"));
       return;
     }
     const csvText = buildCsv(allRecords);

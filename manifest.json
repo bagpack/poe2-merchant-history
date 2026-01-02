@@ -4,10 +4,7 @@
   "version": "0.1.0",
   "description": "__MSG_extDescription__",
   "permissions": ["storage", "cookies"],
-  "host_permissions": [
-    "https://jp.pathofexile.com/*",
-    "https://pathofexile.com/*"
-  ],
+  "host_permissions": ["https://jp.pathofexile.com/*", "https://pathofexile.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

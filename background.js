@@ -1,8 +1,4 @@
-import {
-  openLeagueDb,
-  requestToPromise,
-  transactionComplete,
-} from "./shared.js";
+import { openLeagueDb, requestToPromise, transactionComplete } from "./shared.js";
 import { getAcceptLanguage, getHostForLanguage } from "./i18n.js";
 
 const REQUIRED_COOKIES = ["POESESSID"];
@@ -74,9 +70,7 @@ async function getCookie(name, language) {
 }
 
 async function ensureAuthCookies(language) {
-  const results = await Promise.all(
-    REQUIRED_COOKIES.map((name) => getCookie(name, language))
-  );
+  const results = await Promise.all(REQUIRED_COOKIES.map((name) => getCookie(name, language)));
   const missing = REQUIRED_COOKIES.filter((_, index) => !results[index]);
   if (missing.length > 0) {
     throw makeError("AUTH_EXPIRED", "Login expired.", {
@@ -185,11 +179,9 @@ async function enforceRateLimit() {
   if (elapsed < minIntervalMs) {
     const remainingMs = minIntervalMs - elapsed;
     const remainingSec = Math.ceil(remainingMs / 1000);
-    throw makeError(
-      "RATE_LIMIT",
-      `Update limited. Wait ${remainingSec} seconds.`,
-      { remainingSec }
-    );
+    throw makeError("RATE_LIMIT", `Update limited. Wait ${remainingSec} seconds.`, {
+      remainingSec,
+    });
   }
 
   chrome.storage.local.set({ lastHistoryFetchAt: now });

@@ -42,8 +42,7 @@ const MESSAGES = {
     modalLeagueFetchFailed: "Failed to load leagues.",
     modalSelectLeague: "Please select a league.",
     modalNoExportData: "No data to export.",
-    errorLeagueMismatch:
-      "League mismatch. Expected: {expected} / Actual: {actual}",
+    errorLeagueMismatch: "League mismatch. Expected: {expected} / Actual: {actual}",
     errorDuplicateId: "Duplicate ID detected. ID: {itemId} (Stopped)",
     errorFetchFailed: "Failed to fetch history. Please try again later.",
     errorAuthExpired: "Login expired. Please sign in again.",
@@ -152,10 +151,7 @@ export function loadUiLanguage() {
 
 export function saveUiLanguage(lang) {
   return new Promise((resolve) => {
-    chrome.storage.local.set(
-      { [LANGUAGE_STORAGE_KEY]: normalizeLanguage(lang) },
-      () => resolve()
-    );
+    chrome.storage.local.set({ [LANGUAGE_STORAGE_KEY]: normalizeLanguage(lang) }, () => resolve());
   });
 }
 
@@ -170,9 +166,7 @@ export function getHostForLanguage(lang) {
 }
 
 export function getAcceptLanguage(lang) {
-  return normalizeLanguage(lang) === "ja"
-    ? "ja,en-US;q=0.9,en;q=0.8"
-    : "en-US,en;q=0.9,ja;q=0.8";
+  return normalizeLanguage(lang) === "ja" ? "ja,en-US;q=0.9,en;q=0.8" : "en-US,en;q=0.9,ja;q=0.8";
 }
 
 export function t(lang, key, params = {}) {
