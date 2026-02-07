@@ -99,6 +99,7 @@ function showDetail(record) {
       renderDetailRow("icon", detail.icon),
       renderDetailText(`${t(currentLanguage, "detailTypeLine")}: ${detail.typeLine || ""}`),
       renderDetailText(`${t(currentLanguage, "detailRarity")}: ${detail.rarity || ""}`),
+      renderCorruptionStatus(detail),
       renderDetailText(
         `${t(currentLanguage, "detailSockets")}: ${detail.sockets ? detail.sockets.length : 0}`
       ),
@@ -166,6 +167,32 @@ function renderDetailText(text) {
   const p = document.createElement("p");
   p.textContent = text;
   return p;
+}
+
+function getCorruptionLabel(detail) {
+  const isDouble =
+    detail?.doubleCorrupted ||
+    detail?.double_corrupted ||
+    detail?.isDoubleCorrupted ||
+    detail?.is_double_corrupted;
+  if (isDouble) {
+    return t(currentLanguage, "detailDoubleCorrupted");
+  }
+
+  const isCorrupted = detail?.corrupted || detail?.isCorrupted || detail?.is_corrupted;
+  if (isCorrupted) {
+    return t(currentLanguage, "detailCorrupted");
+  }
+
+  return null;
+}
+
+function renderCorruptionStatus(detail) {
+  const label = getCorruptionLabel(detail);
+  if (!label) {
+    return null;
+  }
+  return renderDetailText(label);
 }
 
 function renderListBlock(title, items) {
