@@ -117,6 +117,9 @@ function showDetail(record) {
   detailBody.appendChild(
     renderListBlock(t(currentLanguage, "detailRequirements"), detail.requirements)
   );
+  detailBody.appendChild(
+    renderListBlock(t(currentLanguage, "detailImplicitMods"), detail.implicitMods)
+  );
   detailBody.appendChild(renderListBlock(t(currentLanguage, "detailRuneMods"), detail.runeMods));
   detailBody.appendChild(
     renderListBlock(t(currentLanguage, "detailExplicitMods"), detail.explicitMods)
