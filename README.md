@@ -18,23 +18,14 @@ PoE2の売上履歴をリーグ別に保存し、グラフと表で可視化す�
 
 1. Chromeで `chrome://extensions/` を開く
 2. 右上の「デベロッパーモード」をON
-3. 「パッケージ化されていない拡張機能を読み込む」をクリック
-4. このリポジトリのフォルダを選択
+3. `npm run build` を実行して `dist/` を生成
+4. 「パッケージ化されていない拡張機能を読み込む」をクリック
+5. `dist/` フォルダを選択
 
-## 開発環境（Dev Container）
+## 開発者向けドキュメント
 
-ローカル環境を汚さずに開発する場合は Dev Container を使います。
-
-1. Docker Desktop を起動
-2. VS Code / Cursor でこのリポジトリを開く
-3. 「Reopen in Container」を実行
-4. 初回起動時に `npm ci` と Chromium のセットアップが実行される
-
-コンテナ内で使う主なコマンド:
-
-- `npm run lint`
-- `npm run test:e2e`
-- `npm run test:e2e:smoke`
+開発手順（Dev Container、TypeScript構成、ビルド/検証コマンド）は以下に分離しています。  
+`docs/development.md`
 
 ## 使い方
 

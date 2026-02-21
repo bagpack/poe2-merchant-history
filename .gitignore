@@ -18,6 +18,8 @@ Thumbs.db
 
 # dependencies
 node_modules/
+# build directory
+dist/
 # playwright artifacts
 playwright-report/
 test-results/

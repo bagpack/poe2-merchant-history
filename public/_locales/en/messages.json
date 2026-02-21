@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "PoE2 Merchant History"
+  },
+  "extDescription": {
+    "message": "Store Path of Exile 2 merchant sales history per league and visualize it with charts and tables."
+  },
+  "extTitle": {
+    "message": "PoE2 Merchant History"
+  }
+}

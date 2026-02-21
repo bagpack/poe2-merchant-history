@@ -15,5 +15,14 @@ module.exports = {
   rules: {
     "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
   },
-  ignorePatterns: ["chart.umd.min.js", "docs/**", "icons/**", "_locales/**", ".agent/**"],
+  ignorePatterns: [
+    "dist/**",
+    "public/chart.umd.min.js",
+    "public/icons/**",
+    "public/_locales/**",
+    "docs/**",
+    "icons/**",
+    "_locales/**",
+    ".agent/**",
+  ],
 };

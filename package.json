@@ -3,20 +3,26 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "lint:eslint": "eslint \"**/*.js\"",
-    "lint:style": "stylelint \"**/*.css\"",
-    "format:check": "prettier --check \"**/*.{js,css,html,json,md,yml}\"",
-    "format": "prettier --write \"**/*.{js,css,html,json,md,yml}\"",
-    "lint": "npm run lint:eslint && npm run lint:style && npm run format:check",
+    "lint:eslint": "eslint playwright.config.js tests/**/*.js",
+    "lint:style": "stylelint public/**/*.css",
+    "typecheck": "tsc --noEmit",
+    "build:ts": "tsc -p tsconfig.json",
+    "build": "vite build",
+    "format:check": "prettier --check \"**/*.{js,ts,css,html,json,md,yml,mjs}\"",
+    "format": "prettier --write \"**/*.{js,ts,css,html,json,md,yml,mjs}\"",
+    "lint": "npm run lint:eslint && npm run lint:style && npm run typecheck && npm run format:check",
     "setup:browsers": "playwright install --with-deps chromium",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@types/chrome": "^0.1.27",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
     "stylelint": "^16.5.0",
-    "stylelint-config-standard": "^36.0.0"
+    "stylelint-config-standard": "^36.0.0",
+    "typescript": "^5.9.2",
+    "vite": "^6.1.1"
   }
 }

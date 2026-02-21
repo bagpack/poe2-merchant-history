@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "PoE2 Merchant History"
+  },
+  "extDescription": {
+    "message": "PoE2の売上履歴をリーグ別に保存し、グラフと表で表示します。"
+  },
+  "extTitle": {
+    "message": "PoE2 Merchant History"
+  }
+}

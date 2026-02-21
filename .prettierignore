@@ -1,7 +1,11 @@
 .github/
 .agent/
 chart.umd.min.js
+public/chart.umd.min.js
 docs/
 icons/
 _locales/
+public/icons/
+public/_locales/
+dist/
 AGENTS.md

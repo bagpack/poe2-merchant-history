@@ -27,15 +27,16 @@ jobs:
       - name: Lint and format check
         run: npm run lint
 
-
+      - name: Build extension
+        run: npm run build
       - name: Verify manifest and icons
         run: |
-          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));if(!m.name||!m.version||!m.manifest_version){throw new Error('manifest missing required fields');}if(!m.icons){throw new Error('manifest missing icons');}const icons=m.icons;['16','32','48','128'].forEach(s=>{if(!icons[s]){throw new Error('missing icon size '+s);}if(!fs.existsSync(icons[s])){throw new Error('icon file missing: '+icons[s]);}});console.log('manifest ok');"
+          node -e "const fs=require('fs');const path=require('path');const base='dist';const m=JSON.parse(fs.readFileSync(path.join(base,'manifest.json'),'utf8'));if(!m.name||!m.version||!m.manifest_version){throw new Error('manifest missing required fields');}if(!m.icons){throw new Error('manifest missing icons');}const icons=m.icons;['16','32','48','128'].forEach(s=>{if(!icons[s]){throw new Error('missing icon size '+s);}const p=path.join(base,icons[s]);if(!fs.existsSync(p)){throw new Error('icon file missing: '+p);}});console.log('manifest ok');"
 
       - name: Create extension zip
         run: |
-          zip -r extension.zip . \
-            -x ".git/*" ".github/*" ".agent/*" "node_modules/*"
+          cd dist
+          zip -r ../extension.zip .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
