@@ -29,7 +29,6 @@ const detailTitle = document.getElementById("detail-title");
 const detailSubtitle = document.getElementById("detail-subtitle");
 const detailBody = document.getElementById("detail-body");
 const detailCard = document.getElementById("detail-card");
-const detailClose = document.getElementById("detail-close");
 
 const currencyOrder = [
   "divine",
@@ -110,7 +109,9 @@ function showDetail(record) {
   }
 
   appendSection(buildPropertySectionLines(detail), "muted");
+  appendSection(buildGemSocketsLines(detail), "muted");
   appendSection(buildRequirementsLines(detail.requirements), "muted");
+  appendSection(buildEnchantSectionLines(detail), "enchanted");
   appendSection(toDisplayLines(detail.implicitMods), "magic");
   appendSection(buildRuneSectionLines(detail), "enchanted");
   appendSection(toDisplayLines(detail.fracturedMods), "fractured");
@@ -277,6 +278,31 @@ function buildDesecratedSectionLines(detail) {
     lines.push(t(currentLanguage, "detailDesecratedMods"));
   }
   return lines;
+}
+
+function isActiveSkillGem(detail) {
+  return detail?.frameType === 4 && detail?.support === false;
+}
+
+function buildGemSocketsLines(detail) {
+  if (!isActiveSkillGem(detail) || !Array.isArray(detail?.gemSockets)) {
+    return [];
+  }
+  const socketCount = detail.gemSockets.length;
+  if (socketCount <= 0) {
+    return [];
+  }
+  return [
+    {
+      label: `${t(currentLanguage, "detailGemSockets")}:`,
+      value: socketCount,
+      kind: "gem-sockets-count",
+    },
+  ];
+}
+
+function buildEnchantSectionLines(detail) {
+  return toDisplayLines(detail?.enchantMods);
 }
 
 function buildRequirementsLines(requirements) {
@@ -989,13 +1015,10 @@ function applyLanguage(language) {
   currentLanguage = normalizeLanguage(language);
   document.documentElement.lang = currentLanguage;
   applyTranslations(document, currentLanguage);
-  detailClose.setAttribute("aria-label", t(currentLanguage, "detailClose"));
-  detailClose.setAttribute("title", t(currentLanguage, "detailClose"));
 }
 
 async function init() {
   modalClose.addEventListener("click", hideModal);
-  detailClose.addEventListener("click", hideDetail);
   modal.addEventListener("click", (event) => {
     if (event.target === modal) {
       hideModal();
