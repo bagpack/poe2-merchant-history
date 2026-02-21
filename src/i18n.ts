@@ -70,6 +70,12 @@ const MESSAGES: MessagesByLanguage = {
     cookieButtonRefresh: "Refresh",
     cookieStatusOk: "Available (expires: {date})",
     cookieStatusMissing: "Missing",
+    backupTitle: "Backup & Restore",
+    backupDesc: "Export/import storage and IndexedDB data when extension ID changes.",
+    backupExport: "Export Backup",
+    backupImport: "Import Backup",
+    backupDone: "Completed",
+    backupFailed: "Failed: {message}",
   },
   ja: {
     appTitle: "PoE2 Merchant History",
@@ -132,6 +138,12 @@ const MESSAGES: MessagesByLanguage = {
     cookieButtonRefresh: "再取得",
     cookieStatusOk: "取得済み (期限: {date})",
     cookieStatusMissing: "未取得",
+    backupTitle: "バックアップ / 復元",
+    backupDesc: "拡張ID変更時に備えて storage と IndexedDB をエクスポート/インポートします。",
+    backupExport: "バックアップ出力",
+    backupImport: "バックアップ読込",
+    backupDone: "完了",
+    backupFailed: "失敗: {message}",
   },
 };
 

@@ -30,6 +30,11 @@ h1 {
   margin: 0 0 8px 0;
 }
 
+h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+}
+
 p {
   margin: 0;
   color: var(--muted);
@@ -74,4 +79,15 @@ button {
   color: #fff;
   cursor: pointer;
   font-family: inherit;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.backup-status {
+  margin-top: 10px;
+  font-weight: 600;
 }

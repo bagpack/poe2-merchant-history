@@ -17,6 +17,18 @@
         <div id="cookie-list"></div>
         <button id="refresh-cookies" data-i18n="cookieButtonRefresh">再取得</button>
       </section>
+
+      <section class="card">
+        <h2 data-i18n="backupTitle">バックアップ / 復元</h2>
+        <p data-i18n="backupDesc">
+          拡張ID変更時に備えて storage と IndexedDB をエクスポート/インポートします。
+        </p>
+        <div class="actions">
+          <button id="export-backup" data-i18n="backupExport">バックアップ出力</button>
+          <button id="import-backup" data-i18n="backupImport">バックアップ読込</button>
+        </div>
+        <p id="backup-status" class="backup-status"></p>
+      </section>
     </main>
 
     <script type="module" src="options.js"></script>

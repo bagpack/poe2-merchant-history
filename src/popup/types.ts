@@ -1,0 +1,165 @@
+export type Language = "en" | "ja";
+
+export interface LeagueOption {
+  id: string;
+  text: string;
+}
+
+export interface HistoryErrorMeta {
+  expectedLeague?: string;
+  actualLeague?: string;
+  itemId?: string;
+  remainingSec?: number;
+}
+
+export interface HistoryErrorPayload {
+  code?: string;
+  message?: string;
+  meta?: HistoryErrorMeta;
+}
+
+export interface HistoryResponsePayload {
+  ok?: boolean;
+  result?: {
+    addedCount?: number;
+    fetchedCount?: number;
+    totalCount?: number;
+  };
+  error?: HistoryErrorPayload;
+}
+
+export interface ValuePair {
+  0: string;
+  1?: number;
+}
+
+export interface PropertyEntry {
+  name?: string;
+  values?: Array<ValuePair | string>;
+}
+
+export interface RequirementEntry {
+  name?: string;
+  values?: Array<ValuePair | string>;
+}
+
+export interface SocketEntry {
+  group?: number;
+  type?: string;
+  kind?: string;
+}
+
+export interface SocketedItemEntry {
+  name?: string;
+  typeLine?: string;
+  runeMods?: unknown[];
+  properties?: PropertyEntry[];
+}
+
+export interface ItemDetails {
+  name?: string;
+  typeLine?: string;
+  baseType?: string;
+  rarity?: string;
+  ilvl?: number | string;
+  icon?: string;
+  w?: number;
+  h?: number;
+  frameType?: number;
+  support?: boolean;
+  gemSockets?: string[];
+  properties?: unknown[];
+  requirements?: RequirementEntry[] | string[];
+  implicitMods?: unknown[];
+  runeMods?: unknown[];
+  fracturedMods?: unknown[];
+  explicitMods?: unknown[];
+  desecratedMods?: unknown[];
+  logbookMods?: Array<{ name?: string; mods?: string[] }>;
+  enchantMods?: unknown[];
+  socketedItems?: SocketedItemEntry[];
+  sockets?: SocketEntry[];
+  doubleCorrupted?: boolean;
+  double_corrupted?: boolean;
+  isDoubleCorrupted?: boolean;
+  is_double_corrupted?: boolean;
+  corrupted?: boolean;
+  isCorrupted?: boolean;
+  is_corrupted?: boolean;
+  desecrated?: boolean;
+  isDesecrated?: boolean;
+  is_desecrated?: boolean;
+}
+
+export interface TradeRecord {
+  id: string;
+  item_name?: string;
+  item_name_unique?: string | null;
+  currency?: string;
+  amount?: number;
+  time: string;
+  details_json?: ItemDetails;
+  _timeMs?: number;
+}
+
+export interface MetaLine {
+  label: string;
+  value: string | number;
+  kind?: string;
+}
+
+export type DisplayLine = string | MetaLine;
+
+export interface PopupDom {
+  leagueSelect: HTMLSelectElement;
+  refreshButton: HTMLButtonElement;
+  languageSelect: HTMLSelectElement;
+  totalsContainer: HTMLElement;
+  historyBody: HTMLTableSectionElement;
+  searchInput: HTMLInputElement;
+  pageSizeSelect: HTMLSelectElement;
+  csvExportButton: HTMLButtonElement;
+  prevPageButton: HTMLButtonElement;
+  nextPageButton: HTMLButtonElement;
+  pageInfo: HTMLElement;
+  modal: HTMLElement;
+  modalTitle: HTMLElement;
+  modalMessage: HTMLElement;
+  modalClose: HTMLButtonElement;
+  detailModal: HTMLElement;
+  detailTitle: HTMLElement;
+  detailSubtitle: HTMLElement;
+  detailBody: HTMLElement;
+  detailCard: HTMLElement;
+  chartCanvas: HTMLCanvasElement;
+}
+
+export interface ChartDataset {
+  label: string;
+  data: number[];
+  borderColor: string;
+  backgroundColor: string;
+  tension: number;
+}
+
+export interface ChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+
+export interface ChartLike {
+  data: ChartData;
+  update: () => void;
+  destroy?: () => void;
+}
+
+export interface ChartCtor {
+  new (
+    canvas: HTMLCanvasElement,
+    config: {
+      type: string;
+      data: ChartData;
+      options: Record<string, unknown>;
+    }
+  ): ChartLike;
+}

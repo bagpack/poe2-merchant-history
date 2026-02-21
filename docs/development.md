@@ -16,6 +16,16 @@
   - `shared.ts`
   - `i18n.ts`
   - `popup.ts`
+  - `popup/`
+    - `app.ts`
+    - `types.ts`
+    - `dom.ts`
+    - `state.ts`
+    - `history-service.ts`
+    - `detail-renderer.ts`
+    - `table-renderer.ts`
+    - `chart-service.ts`
+    - `formatters.ts`
 - `public/`: 静的アセット
   - `manifest.json`
   - `popup.html`, `options.html`
