@@ -7,9 +7,13 @@
     "lint:style": "stylelint \"**/*.css\"",
     "format:check": "prettier --check \"**/*.{js,css,html,json,md,yml}\"",
     "format": "prettier --write \"**/*.{js,css,html,json,md,yml}\"",
-    "lint": "npm run lint:eslint && npm run lint:style && npm run format:check"
+    "lint": "npm run lint:eslint && npm run lint:style && npm run format:check",
+    "setup:browsers": "playwright install --with-deps chromium",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
     "stylelint": "^16.5.0",

@@ -21,6 +21,21 @@ Chrome extension that stores Path of Exile 2 merchant sales history per league a
 3. Click "Load unpacked"
 4. Select this repository folder
 
+## Development Environment (Dev Container)
+
+Use a Dev Container to keep your host environment clean.
+
+1. Start Docker Desktop
+2. Open this repository in VS Code / Cursor
+3. Run "Reopen in Container"
+4. On first start, `npm ci` and Chromium setup run automatically
+
+Main commands inside the container:
+
+- `npm run lint`
+- `npm run test:e2e`
+- `npm run test:e2e:smoke`
+
 ## Usage
 
 1. Click the extension icon to open the tab

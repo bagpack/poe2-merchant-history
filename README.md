@@ -21,6 +21,21 @@ PoE2の売上履歴をリーグ別に保存し、グラフと表で可視化す�
 3. 「パッケージ化されていない拡張機能を読み込む」をクリック
 4. このリポジトリのフォルダを選択
 
+## 開発環境（Dev Container）
+
+ローカル環境を汚さずに開発する場合は Dev Container を使います。
+
+1. Docker Desktop を起動
+2. VS Code / Cursor でこのリポジトリを開く
+3. 「Reopen in Container」を実行
+4. 初回起動時に `npm ci` と Chromium のセットアップが実行される
+
+コンテナ内で使う主なコマンド:
+
+- `npm run lint`
+- `npm run test:e2e`
+- `npm run test:e2e:smoke`
+
 ## 使い方
 
 1. 拡張アイコンをクリックしてタブを開く
