@@ -26,7 +26,9 @@ const modalMessage = document.getElementById("modal-message");
 const modalClose = document.getElementById("modal-close");
 const detailModal = document.getElementById("detail-modal");
 const detailTitle = document.getElementById("detail-title");
+const detailSubtitle = document.getElementById("detail-subtitle");
 const detailBody = document.getElementById("detail-body");
+const detailCard = document.getElementById("detail-card");
 const detailClose = document.getElementById("detail-close");
 
 const currencyOrder = [
@@ -90,83 +92,45 @@ function hideModal() {
 }
 
 function showDetail(record) {
-  detailTitle.textContent = formatItemName(record);
-  detailBody.innerHTML = "";
-
   const detail = record.details_json || {};
-  detailBody.appendChild(
-    renderDetailBlock(t(currentLanguage, "detailBasicInfo"), [
-      renderDetailRow("icon", detail.icon),
-      renderDetailText(`${t(currentLanguage, "detailTypeLine")}: ${detail.typeLine || ""}`),
-      renderDetailText(`${t(currentLanguage, "detailRarity")}: ${detail.rarity || ""}`),
-      renderCorruptionStatus(detail),
-      renderDetailText(
-        `${t(currentLanguage, "detailSockets")}: ${detail.sockets ? detail.sockets.length : 0}`
-      ),
-      renderDetailText(`${t(currentLanguage, "detailIlvl")}: ${detail.ilvl ?? ""}`),
-    ])
-  );
+  const name = detail.name?.trim() || "";
+  const typeLine = detail.typeLine?.trim() || record.item_name || "";
+  const title = name || typeLine || "-";
+  const subtitle = name && typeLine ? typeLine : detail.baseType?.trim() || "";
 
-  detailBody.appendChild(
-    renderListBlock(t(currentLanguage, "detailProperties"), detail.properties)
-  );
-  if (detail.logbookMods && detail.logbookMods.length > 0) {
-    detailBody.appendChild(
-      renderListBlock(t(currentLanguage, "detailLogbookMods"), detail.logbookMods)
-    );
+  detailTitle.textContent = title;
+  detailSubtitle.textContent = subtitle;
+  detailSubtitle.hidden = !subtitle;
+  detailBody.innerHTML = "";
+  detailCard.dataset.rarity = normalizeRarity(detail.rarity);
+
+  const visualSection = renderItemVisual(detail);
+  if (visualSection) {
+    detailBody.appendChild(visualSection);
   }
-  detailBody.appendChild(
-    renderListBlock(t(currentLanguage, "detailRequirements"), detail.requirements)
-  );
-  detailBody.appendChild(
-    renderListBlock(t(currentLanguage, "detailImplicitMods"), detail.implicitMods)
-  );
-  detailBody.appendChild(renderListBlock(t(currentLanguage, "detailRuneMods"), detail.runeMods));
-  detailBody.appendChild(
-    renderListBlock(t(currentLanguage, "detailExplicitMods"), detail.explicitMods)
-  );
-  detailBody.appendChild(
-    renderListBlock(t(currentLanguage, "detailDesecratedMods"), detail.desecratedMods)
-  );
+
+  appendSection(buildPropertySectionLines(detail), "muted");
+  appendSection(buildRequirementsLines(detail.requirements), "muted");
+  appendSection(toDisplayLines(detail.implicitMods), "magic");
+  appendSection(buildRuneSectionLines(detail), "enchanted");
+  appendSection(toDisplayLines(detail.fracturedMods), "fractured");
+  appendSection(toDisplayLines(detail.explicitMods), "magic");
+  appendSection(buildDesecratedSectionLines(detail), "desecrated");
+  appendSection(toLogbookLines(detail.logbookMods), "muted");
+
+  const corruptionStatus = getCorruptionLabel(detail);
+  if (corruptionStatus) {
+    appendSection([corruptionStatus], "corrupted");
+  }
+  if (!detailBody.children.length) {
+    appendSection([t(currentLanguage, "detailNone")], "muted");
+  }
 
   detailModal.classList.remove("hidden");
 }
 
 function hideDetail() {
   detailModal.classList.add("hidden");
-}
-
-function renderDetailBlock(title, nodes) {
-  const block = document.createElement("div");
-  block.className = "detail-block";
-  const heading = document.createElement("h4");
-  heading.textContent = title;
-  block.appendChild(heading);
-  nodes.forEach((node) => {
-    if (node) {
-      block.appendChild(node);
-    }
-  });
-  return block;
-}
-
-function renderDetailRow(label, iconUrl) {
-  if (!iconUrl) {
-    return null;
-  }
-  const row = document.createElement("div");
-  row.className = "detail-row";
-  const img = document.createElement("img");
-  img.alt = label;
-  img.src = iconUrl;
-  row.appendChild(img);
-  return row;
-}
-
-function renderDetailText(text) {
-  const p = document.createElement("p");
-  p.textContent = text;
-  return p;
 }
 
 function getCorruptionLabel(detail) {
@@ -187,62 +151,478 @@ function getCorruptionLabel(detail) {
   return null;
 }
 
-function renderCorruptionStatus(detail) {
-  const label = getCorruptionLabel(detail);
-  if (!label) {
-    return null;
-  }
-  return renderDetailText(label);
+function normalizeRarity(rarity) {
+  const normalized = String(rarity || "normal")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+  return normalized || "normal";
 }
 
-function renderListBlock(title, items) {
-  const block = document.createElement("div");
-  block.className = "detail-block";
-  const heading = document.createElement("h4");
-  heading.textContent = title;
-  block.appendChild(heading);
+function appendSection(lines, tone) {
+  const filtered = (lines || []).filter(
+    (line) => line !== null && line !== undefined && line !== ""
+  );
+  if (!filtered.length) {
+    return;
+  }
+  const section = document.createElement("section");
+  section.className = `detail-section detail-section-${tone}`;
+  filtered.forEach((line) => {
+    const p = document.createElement("p");
+    p.className = `item-line item-line-${resolveLineTone(line, tone)}`;
+    if (isMetaLine(line)) {
+      const label = document.createElement("span");
+      label.className = "item-line-label";
+      label.textContent = line.label;
+      p.appendChild(label);
 
-  if (!items || items.length === 0) {
-    block.appendChild(renderDetailText(t(currentLanguage, "detailNone")));
-    return block;
+      if (line.value !== null && line.value !== undefined && line.value !== "") {
+        p.appendChild(document.createTextNode(" "));
+        if (line.kind === "requires") {
+          appendRequiresValue(p, String(line.value));
+        } else {
+          const value = document.createElement("span");
+          value.className = "item-line-value";
+          value.textContent = String(line.value);
+          p.appendChild(value);
+        }
+      }
+    } else {
+      p.textContent = line;
+    }
+    section.appendChild(p);
+  });
+  detailBody.appendChild(section);
+}
+
+function buildPropertySectionLines(detail) {
+  const lines = reorderPropertyLines(toDisplayLines(detail.properties));
+  const itemLevel = Number(detail.ilvl);
+  const hasItemLevel =
+    detail.ilvl !== null &&
+    detail.ilvl !== undefined &&
+    detail.ilvl !== "" &&
+    !Number.isNaN(itemLevel) &&
+    itemLevel > 0;
+  if (hasItemLevel) {
+    lines.push({
+      label: `${t(currentLanguage, "detailIlvl")}:`,
+      value: itemLevel,
+      kind: "item-level",
+    });
+  }
+  return lines;
+}
+
+function reorderPropertyLines(lines) {
+  if (!Array.isArray(lines) || lines.length === 0) {
+    return [];
+  }
+  const mapped = lines.map((line) => normalizeCorruptionLevelLine(line)).filter(Boolean);
+  const corruptionIndex = mapped.findIndex((line) => isCorruptionLevelLine(line));
+  if (corruptionIndex === -1) {
+    return mapped;
+  }
+  const qualityIndex = mapped.findIndex((line) => isQualityLine(line));
+  if (qualityIndex <= 0 || qualityIndex === corruptionIndex) {
+    return mapped;
   }
 
-  items.forEach((item) => {
-    if (typeof item === "string") {
-      block.appendChild(renderDetailText(item));
-      return;
+  const reordered = [...mapped];
+  const [corruptionLine] = reordered.splice(corruptionIndex, 1);
+  const insertIndex = corruptionIndex < qualityIndex ? qualityIndex - 1 : qualityIndex;
+  reordered.splice(insertIndex, 0, corruptionLine);
+  return reordered;
+}
+
+function normalizeCorruptionLevelLine(line) {
+  if (typeof line !== "string") {
+    return line;
+  }
+  const match = line.match(/([+-]\d+)\s*Level from Corruption/i);
+  if (!match) {
+    return line;
+  }
+  const delta = match[1];
+  if (currentLanguage === "ja") {
+    return `穢れにより${delta}レベル`;
+  }
+  return `${delta} Level from Corruption`;
+}
+
+function isCorruptionLevelLine(line) {
+  if (typeof line !== "string") {
+    return false;
+  }
+  return (
+    /Level from Corruption/i.test(line) ||
+    line.includes("穢れにより+1レベル") ||
+    line.includes("穢れにより-1レベル") ||
+    line.includes("穢れにより+-1レベル")
+  );
+}
+
+function isQualityLine(line) {
+  if (typeof line !== "string") {
+    return false;
+  }
+  return /quality/i.test(line) || line.includes("品質");
+}
+
+function buildDesecratedSectionLines(detail) {
+  const lines = toDisplayLines(detail.desecratedMods);
+  const isDesecrated = detail?.desecrated || detail?.isDesecrated || detail?.is_desecrated;
+  if (isDesecrated && !lines.length) {
+    lines.push(t(currentLanguage, "detailDesecratedMods"));
+  }
+  return lines;
+}
+
+function buildRequirementsLines(requirements) {
+  if (!Array.isArray(requirements) || requirements.length === 0) {
+    return [];
+  }
+  if (requirements.every((entry) => typeof entry === "string")) {
+    const joined = requirements.filter(Boolean).join(", ").trim();
+    if (!joined) {
+      return [];
     }
+    if (joined.toLowerCase().startsWith("requires:")) {
+      return [joined];
+    }
+    return [{ label: "Requires:", value: joined, kind: "requires" }];
+  }
+
+  const parts = requirements.map((entry) => formatRequirementPart(entry)).filter(Boolean);
+  if (!parts.length) {
+    return [];
+  }
+  return [{ label: "Requires:", value: parts.join(", "), kind: "requires" }];
+}
+
+function buildRuneSectionLines(detail) {
+  const lines = [...toDisplayLines(detail.runeMods)];
+  const fallbackLines = extractSocketedRuneEffects(detail);
+  fallbackLines.forEach((line) => {
+    if (!lines.includes(line)) {
+      lines.push(line);
+    }
+  });
+  return lines;
+}
+
+function formatRequirementPart(requirement) {
+  if (!requirement || typeof requirement !== "object") {
+    return null;
+  }
+  const name = normalizeRequirementToken(requirement.name);
+  const value = (requirement.values || [])
+    .map((v) => (Array.isArray(v) ? v[0] : String(v)))
+    .find(Boolean);
+  if (!name && !value) {
+    return null;
+  }
+  if (!name) {
+    return String(value);
+  }
+  if (!value) {
+    return name;
+  }
+  if (name.toLowerCase() === "level") {
+    return `${name} ${value}`;
+  }
+  return `${value} ${name}`;
+}
+
+function normalizeRequirementToken(text) {
+  const source = String(text || "").trim();
+  if (!source) {
+    return "";
+  }
+  return source
+    .replace(/\[([^|\]]+)\|([^\]]+)\]/g, "$2")
+    .replace(/\[([^\]]+)\]/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function appendRequiresValue(parent, valueText) {
+  const parts = valueText
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) {
+    const fallback = document.createElement("span");
+    fallback.className = "item-line-value";
+    fallback.textContent = valueText;
+    parent.appendChild(fallback);
+    return;
+  }
+  parts.forEach((part, index) => {
+    if (index > 0) {
+      const separator = document.createElement("span");
+      separator.className = "item-line-separator";
+      separator.textContent = ", ";
+      parent.appendChild(separator);
+    }
+    const token = document.createElement("span");
+    token.className = "item-line-value";
+    token.textContent = part;
+    parent.appendChild(token);
+  });
+}
+
+function isMetaLine(line) {
+  return typeof line === "object" && line !== null && "label" in line;
+}
+
+function resolveLineTone(line, fallbackTone) {
+  if (!line) {
+    return fallbackTone;
+  }
+  if (typeof line === "object" && line.kind === "item-level") {
+    return "muted";
+  }
+  const text = typeof line === "string" ? line : "";
+  if (text.includes("Desecrated") || text.includes("冒涜")) {
+    return "desecrated";
+  }
+  if (text.includes("Fractured") || text.includes("フラクト")) {
+    return "fractured";
+  }
+  if (text.includes("Corrupted") || text.includes("コラプト")) {
+    return "corrupted";
+  }
+  const trimmed = text.trim();
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || trimmed.startsWith("-")) {
+    return "flavor";
+  }
+  return fallbackTone;
+}
+
+function toDisplayLines(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+  return items
+    .map((item) => {
+      if (!item) {
+        return null;
+      }
+      if (typeof item === "string") {
+        return item;
+      }
+      const name = item.name ? String(item.name).trim() : "";
+      const values = (item.values || [])
+        .map((value) => (Array.isArray(value) ? value[0] : String(value)))
+        .filter(Boolean)
+        .join(", ");
+      if (name && values) {
+        return `${name}: ${values}`;
+      }
+      if (name) {
+        return name;
+      }
+      return values || null;
+    })
+    .filter(Boolean);
+}
+
+function toLogbookLines(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+  const lines = [];
+  items.forEach((item) => {
     if (!item || !item.name) {
       return;
     }
-    if (title === t(currentLanguage, "detailLogbookMods")) {
-      const group = document.createElement("div");
-      group.className = "logbook-group";
-      const nameLine = document.createElement("div");
-      nameLine.className = "logbook-name";
-      nameLine.textContent = item.name;
-      group.appendChild(nameLine);
-      if (Array.isArray(item.mods) && item.mods.length > 0) {
-        item.mods.forEach((mod) => {
-          if (!mod) {
-            return;
-          }
-          const modLine = document.createElement("div");
-          modLine.className = "logbook-mod";
-          modLine.textContent = mod;
-          group.appendChild(modLine);
-        });
-      }
-      block.appendChild(group);
+    lines.push(item.name);
+    if (Array.isArray(item.mods)) {
+      item.mods.forEach((mod) => {
+        if (mod) {
+          lines.push(`- ${mod}`);
+        }
+      });
+    }
+  });
+  return lines;
+}
+
+function extractSocketedRuneEffects(detail) {
+  if (!Array.isArray(detail?.socketedItems)) {
+    return [];
+  }
+  const lines = [];
+  detail.socketedItems.forEach((socketedItem) => {
+    if (!socketedItem || typeof socketedItem !== "object") {
       return;
     }
-    const values = (item.values || [])
-      .map((value) => (Array.isArray(value) ? value[0] : String(value)))
-      .join(", ");
-    block.appendChild(renderDetailText(values ? `${item.name}: ${values}` : item.name));
-  });
+    const baseName = `${socketedItem.name || ""} ${socketedItem.typeLine || ""}`.toLowerCase();
+    const looksLikeRune = baseName.includes("rune") || baseName.includes("soul core");
+    if (!looksLikeRune) {
+      return;
+    }
 
-  return block;
+    toDisplayLines(socketedItem.runeMods).forEach((line) => {
+      if (!lines.includes(line)) {
+        lines.push(line);
+      }
+    });
+
+    (socketedItem.properties || []).forEach((property) => {
+      const line = toPropertyStatLine(property);
+      if (!line || !isLikelyRuneEffect(line)) {
+        return;
+      }
+      if (!lines.includes(line)) {
+        lines.push(line);
+      }
+    });
+  });
+  return lines;
+}
+
+function toPropertyStatLine(property) {
+  if (!property || typeof property !== "object") {
+    return null;
+  }
+  const name = String(property.name || "").trim();
+  const values = (property.values || [])
+    .map((value) => (Array.isArray(value) ? value[0] : String(value)))
+    .filter(Boolean)
+    .join(", ");
+  if (!name && !values) {
+    return null;
+  }
+  if (name && values) {
+    return `${name}: ${values}`;
+  }
+  return name || values;
+}
+
+function isLikelyRuneEffect(line) {
+  if (!line || typeof line !== "string") {
+    return false;
+  }
+  const text = line.trim().toLowerCase();
+  if (!text.includes(":")) {
+    return false;
+  }
+  if (
+    text.includes("stack size") ||
+    text.includes("requires") ||
+    text.includes("limited to") ||
+    text.startsWith("rune:") ||
+    text.startsWith("soul core:")
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function renderItemVisual(detail) {
+  const hasIcon = Boolean(detail?.icon);
+  const sockets = normalizeSockets(detail?.sockets);
+  if (!hasIcon && !sockets.length) {
+    return null;
+  }
+
+  const section = document.createElement("section");
+  section.className = "detail-section detail-section-visual";
+
+  if (hasIcon) {
+    const visual = document.createElement("div");
+    visual.className = "item-visual";
+
+    const icon = document.createElement("img");
+    icon.className = "item-icon";
+    icon.src = detail.icon;
+    icon.alt = detail.typeLine || "item";
+    visual.appendChild(icon);
+
+    if (sockets.length) {
+      const overlay = document.createElement("div");
+      overlay.className = "socket-overlay";
+      const points = computeSocketPoints(sockets.length, detail?.w, detail?.h);
+      sockets.forEach((socket, index) => {
+        const node = document.createElement("span");
+        node.className = `socket-node socket-${socket.kind}`;
+        node.style.setProperty("--socket-x", `${points[index].x}%`);
+        node.style.setProperty("--socket-y", `${points[index].y}%`);
+        node.title = `${t(currentLanguage, "detailSockets")} #${index + 1}`;
+        overlay.appendChild(node);
+      });
+      visual.appendChild(overlay);
+    }
+
+    section.appendChild(visual);
+  } else if (sockets.length) {
+    const socketRow = document.createElement("div");
+    socketRow.className = "socket-row";
+    sockets.forEach((socket, index) => {
+      const node = document.createElement("span");
+      node.className = `socket-node socket-${socket.kind}`;
+      node.title = `${t(currentLanguage, "detailSockets")} #${index + 1}`;
+      socketRow.appendChild(node);
+      if (index < sockets.length - 1) {
+        const spacer = document.createElement("span");
+        spacer.className = "socket-link";
+        spacer.textContent = " ";
+        socketRow.appendChild(spacer);
+      }
+    });
+    section.appendChild(socketRow);
+  }
+
+  return section;
+}
+
+function normalizeSockets(sockets) {
+  if (!Array.isArray(sockets)) {
+    return [];
+  }
+  return sockets.map((socket) => {
+    if (!socket || typeof socket !== "object") {
+      return { group: -1, kind: "default" };
+    }
+    const type = String(socket.type || socket.kind || "").toLowerCase();
+    if (type.includes("rune")) {
+      return { group: socket.group ?? -1, kind: "rune" };
+    }
+    if (type.includes("support")) {
+      return { group: socket.group ?? -1, kind: "support" };
+    }
+    if (type.includes("gem")) {
+      return { group: socket.group ?? -1, kind: "gem" };
+    }
+    return { group: socket.group ?? -1, kind: "default" };
+  });
+}
+
+function computeSocketPoints(count, itemWidth, itemHeight) {
+  const width = Number(itemWidth) || 2;
+  const height = Number(itemHeight) || 2;
+  const vertical = height > width;
+  const templatesVertical = [
+    { x: 50, y: 14 },
+    { x: 50, y: 86 },
+    { x: 26, y: 50 },
+    { x: 74, y: 50 },
+    { x: 26, y: 80 },
+    { x: 74, y: 20 },
+  ];
+  const templatesHorizontal = [
+    { x: 14, y: 50 },
+    { x: 86, y: 50 },
+    { x: 50, y: 26 },
+    { x: 50, y: 74 },
+    { x: 20, y: 26 },
+    { x: 80, y: 74 },
+  ];
+  const table = vertical ? templatesVertical : templatesHorizontal;
+  return Array.from({ length: count }, (_, idx) => table[idx] || { x: 50, y: 50 });
 }
 
 async function loadLeagues(language) {
@@ -609,6 +989,8 @@ function applyLanguage(language) {
   currentLanguage = normalizeLanguage(language);
   document.documentElement.lang = currentLanguage;
   applyTranslations(document, currentLanguage);
+  detailClose.setAttribute("aria-label", t(currentLanguage, "detailClose"));
+  detailClose.setAttribute("title", t(currentLanguage, "detailClose"));
 }
 
 async function init() {

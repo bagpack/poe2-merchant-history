@@ -90,12 +90,15 @@
     </div>
 
     <div id="detail-modal" class="modal hidden">
-      <div class="modal-content modal-large">
-        <div class="detail-header">
-          <h3 id="detail-title"></h3>
-          <button id="detail-close" data-i18n="detailClose">閉じる</button>
-        </div>
-        <div id="detail-body" class="detail-body"></div>
+      <div class="modal-content modal-tooltip">
+        <button id="detail-close" class="tooltip-close" aria-label="close">×</button>
+        <article id="detail-card" class="item-tooltip" data-rarity="normal">
+          <header class="item-tooltip-header">
+            <h3 id="detail-title"></h3>
+            <p id="detail-subtitle"></p>
+          </header>
+          <div id="detail-body" class="detail-body"></div>
+        </article>
       </div>
     </div>
 
