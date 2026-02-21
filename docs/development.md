@@ -60,8 +60,10 @@
   Viteで `dist/` を生成
 - `npm run test:e2e`  
   Playwright E2E
-- `npm run test:e2e:smoke`  
-  スモークテストのみ
+- `npm run test:e2e:extension`  
+  拡張E2E（optionsのバックアップ出力、popupのリーグ読込/言語切替）
+
+`test:e2e:*` は `dist/` を拡張として読み込むため、実行前に `npm run build` が必要です。
 
 ## 5. ビルドの考え方
 

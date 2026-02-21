@@ -13,7 +13,7 @@
     "lint": "npm run lint:eslint && npm run lint:style && npm run typecheck && npm run format:check",
     "setup:browsers": "playwright install --with-deps chromium",
     "test:e2e": "playwright test",
-    "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.js"
+    "test:e2e:extension": "playwright test tests/e2e/extension-core.spec.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
