@@ -44,3 +44,4 @@ Development details are maintained in Japanese only:
 ## Screenshot
 
 ![Dashboard](docs/images/dashboard.png)
+![Item Detail Sample](docs/images/details.png)

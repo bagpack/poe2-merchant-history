@@ -44,3 +44,4 @@ PoE2の売上履歴をリーグ別に保存し、グラフと表で可視化す�
 ## スクリーンショット
 
 ![ダッシュボード](docs/images/dashboard.png)
+![アイテム詳細サンプル](docs/images/details.png)
