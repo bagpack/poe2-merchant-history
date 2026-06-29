@@ -2,26 +2,39 @@ import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { launchExtensionContext } from "./extension-test-utils.js";
 
-const TRADE_HISTORY_FIXTURE = `<!doctype html>
-<html>
-  <head><meta charset="utf-8"></head>
-  <body>
-    <script>
-      require(["trade"], function(t) {
-        t({"leagues":[{"id":"Fate of the Vaal","text":"Fate of the Vaal"},{"id":"Standard","text":"Standard"}]});
-      });
-    </script>
-  </body>
-</html>`;
+const LEAGUES_API_FIXTURE = {
+  result: [
+    { id: "Runes of Aldur", realm: "poe2", text: "Runes of Aldur" },
+    { id: "Standard", realm: "poe2", text: "Standard" },
+  ],
+};
+
+const HISTORY_API_FIXTURE = {
+  result: [
+    {
+      item_id: "item-1",
+      item: {
+        league: "Runes of Aldur",
+        name: "",
+        typeLine: "Test Item",
+      },
+      price: {
+        currency: "divine",
+        amount: 1,
+      },
+      time: "2026-01-01T00:00:00.000Z",
+    },
+  ],
+};
 
 test("options backup export includes storage and IndexedDB data", async () => {
   const extension = await launchExtensionContext();
 
   try {
-    const page = await extension.context.newPage();
-    await page.goto(`chrome-extension://${extension.extensionId}/options.html`);
+    const setupPage = await extension.context.newPage();
+    await setupPage.goto(`chrome-extension://${extension.extensionId}/options.html`);
 
-    await page.evaluate(async () => {
+    await setupPage.evaluate(async () => {
       await new Promise((resolve) =>
         chrome.storage.local.set({ leagueId: "Fate of the Vaal", uiLanguage: "ja" }, resolve)
       );
@@ -53,6 +66,11 @@ test("options backup export includes storage and IndexedDB data", async () => {
         req.onerror = () => reject(req.error);
       });
     });
+    await setupPage.close();
+
+    const page = await extension.context.newPage();
+    await page.goto(`chrome-extension://${extension.extensionId}/options.html`);
+    await expect(page.getByRole("button", { name: "バックアップ出力" })).toBeVisible();
 
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "バックアップ出力" }).click();
@@ -76,18 +94,18 @@ test("popup loads leagues and supports language switch", async () => {
   const extension = await launchExtensionContext();
 
   try {
-    await extension.context.route("https://pathofexile.com/trade2/history", (route) =>
+    await extension.context.route("https://pathofexile.com/api/trade2/data/leagues", (route) =>
       route.fulfill({
         status: 200,
-        contentType: "text/html; charset=utf-8",
-        body: TRADE_HISTORY_FIXTURE,
+        contentType: "application/json; charset=utf-8",
+        json: LEAGUES_API_FIXTURE,
       })
     );
-    await extension.context.route("https://jp.pathofexile.com/trade2/history", (route) =>
+    await extension.context.route("https://jp.pathofexile.com/api/trade2/data/leagues", (route) =>
       route.fulfill({
         status: 200,
-        contentType: "text/html; charset=utf-8",
-        body: TRADE_HISTORY_FIXTURE,
+        contentType: "application/json; charset=utf-8",
+        json: LEAGUES_API_FIXTURE,
       })
     );
 
@@ -95,10 +113,89 @@ test("popup loads leagues and supports language switch", async () => {
     await page.goto(`chrome-extension://${extension.extensionId}/popup.html`);
 
     await expect(page.locator("#league-select option")).toHaveCount(2);
-    await expect(page.locator("#league-select")).toContainText("Fate of the Vaal");
+    await expect(page.locator("#league-select")).toContainText("Runes of Aldur");
 
     await page.selectOption("#language-select", "ja");
     await expect(page.locator("[data-i18n='labelLeague']")).toHaveText("リーグ");
+  } finally {
+    await extension.dispose();
+  }
+});
+
+test("history update throttles automatic requests but not user requests", async () => {
+  const extension = await launchExtensionContext();
+
+  try {
+    await extension.context.addCookies([
+      {
+        name: "POESESSID",
+        value: "test-session",
+        domain: "pathofexile.com",
+        path: "/",
+        secure: true,
+        httpOnly: true,
+        sameSite: "Lax",
+      },
+    ]);
+    await extension.context.route(
+      "https://pathofexile.com/api/trade2/history/Runes%20of%20Aldur",
+      (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json; charset=utf-8",
+          json: HISTORY_API_FIXTURE,
+        })
+    );
+
+    const page = await extension.context.newPage();
+    await page.goto(`chrome-extension://${extension.extensionId}/popup.html`);
+    await page.evaluate(async () => {
+      await new Promise((resolve) => chrome.storage.local.remove(["lastHistoryFetchAt"], resolve));
+    });
+
+    const firstUserResponse = await page.evaluate(() =>
+      chrome.runtime.sendMessage({
+        type: "updateHistory",
+        leagueId: "Runes of Aldur",
+        language: "en",
+        requestSource: "user",
+      })
+    );
+    const secondUserResponse = await page.evaluate(() =>
+      chrome.runtime.sendMessage({
+        type: "updateHistory",
+        leagueId: "Runes of Aldur",
+        language: "en",
+        requestSource: "user",
+      })
+    );
+
+    expect(firstUserResponse.ok).toBe(true);
+    expect(secondUserResponse.ok).toBe(true);
+
+    await page.evaluate(async () => {
+      await new Promise((resolve) => chrome.storage.local.remove(["lastHistoryFetchAt"], resolve));
+    });
+    const firstAutomaticResponse = await page.evaluate(() =>
+      chrome.runtime.sendMessage({
+        type: "updateHistory",
+        leagueId: "Runes of Aldur",
+        language: "en",
+        requestSource: "automatic",
+      })
+    );
+    const secondAutomaticResponse = await page.evaluate(() =>
+      chrome.runtime.sendMessage({
+        type: "updateHistory",
+        leagueId: "Runes of Aldur",
+        language: "en",
+        requestSource: "automatic",
+      })
+    );
+
+    expect(firstAutomaticResponse.ok).toBe(true);
+    expect(secondAutomaticResponse.ok).toBe(false);
+    expect(secondAutomaticResponse.error.code).toBe("RATE_LIMIT");
   } finally {
     await extension.dispose();
   }

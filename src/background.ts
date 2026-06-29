@@ -53,6 +53,8 @@ interface AppErrorMeta {
   remainingSec?: number;
 }
 
+type UpdateRequestSource = "user" | "automatic";
+
 class AppError extends Error {
   constructor(
     public readonly code: ErrorCode,
@@ -244,7 +246,13 @@ class RateLimiter {
       });
     }
 
-    chrome.storage.local.set({ lastHistoryFetchAt: now });
+    await this.recordRun(now);
+  }
+
+  async recordRun(now = Date.now()): Promise<void> {
+    await new Promise<void>((resolve) => {
+      chrome.storage.local.set({ lastHistoryFetchAt: now }, () => resolve());
+    });
   }
 }
 
@@ -259,17 +267,21 @@ class HistoryUpdateService {
 
   async updateHistory(
     leagueId: string,
-    language: string
+    language: string,
+    requestSource: UpdateRequestSource
   ): Promise<{
     addedCount: number;
     fetchedCount: number;
     totalCount: number;
   }> {
-    // Why: We rate-limit before network work to reduce avoidable server calls and keep
-    // behavior aligned with official API limits.
-    await this.rateLimiter.enforce();
+    if (requestSource === "automatic") {
+      await this.rateLimiter.enforce();
+    }
     await this.authCookieService.ensureAuthCookies(language);
     const apiResponse = await this.apiClient.fetchHistory(leagueId, language);
+    if (requestSource === "user") {
+      await this.rateLimiter.recordRun();
+    }
     const records = this.normalizer.normalize(apiResponse, leagueId);
     const addedCount = await this.repository.saveRecords(leagueId, language, records);
     const totalCount = await this.repository.countRecords(leagueId, language);
@@ -292,9 +304,18 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
     "type" in message &&
     (message as { type?: string }).type === "updateHistory"
   ) {
-    const typedMessage = message as { type: string; leagueId?: string; language?: string };
+    const typedMessage = message as {
+      type: string;
+      leagueId?: string;
+      language?: string;
+      requestSource?: UpdateRequestSource;
+    };
     updateService
-      .updateHistory(typedMessage.leagueId || "", typedMessage.language || "en")
+      .updateHistory(
+        typedMessage.leagueId || "",
+        typedMessage.language || "en",
+        typedMessage.requestSource === "user" ? "user" : "automatic"
+      )
       .then((result) => {
         sendResponse({ ok: true, result });
       })

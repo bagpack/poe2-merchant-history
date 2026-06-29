@@ -1,4 +1,5 @@
 export type Language = "en" | "ja";
+export type UpdateRequestSource = "user" | "automatic";
 
 export interface LeagueOption {
   id: string;

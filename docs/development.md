@@ -70,3 +70,15 @@
 - エントリは `src/popup.ts`, `src/options.ts`, `src/background.ts`
 - Viteが `public/` をコピーし、出力を `dist/` にまとめる
 - `manifest.json` は `public/` を編集して管理する
+
+## 6. リーグ取得
+
+- popupのリーグ一覧は `api/trade2/data/leagues` のJSONから取得する
+- レスポンスの `result` から `realm` が未指定または `poe2` のリーグだけを表示する
+- `trade2/history` のHTML解析は使用しない
+
+## 7. 履歴APIスロットル
+
+- `updateHistory` メッセージは `requestSource` で `user` / `automatic` を区別する
+- popupの更新ボタンなどユーザー操作が契機の履歴取得はスロットルしない
+- `requestSource` が未指定または `automatic` の履歴取得は、直近の履歴API呼び出しから1分未満なら制限する

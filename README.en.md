@@ -16,15 +16,16 @@ Chrome extension that stores Path of Exile 2 merchant sales history per league a
 
 ## Setup
 
-1. Open `chrome://extensions/` in Chrome
-2. Enable Developer Mode
-3. Run `npm run build` to generate `dist/`
-4. Click "Load unpacked"
-5. Select the `dist/` folder
+1. Download the latest `extension-*.zip` from [Releases](https://github.com/bagpack/poe2-merchant-history/releases)
+2. Extract the downloaded zip to any folder
+3. Open `chrome://extensions/` in Chrome
+4. Enable Developer Mode
+5. Click "Load unpacked"
+6. Select the extracted folder
 
 ## Development Docs
 
-Development details are maintained in Japanese only:  
+Build-from-source and development details are maintained in Japanese only:  
 `docs/development.md`
 
 ## Usage

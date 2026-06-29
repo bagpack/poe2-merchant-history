@@ -16,15 +16,16 @@ PoE2の売上履歴をリーグ別に保存し、グラフと表で可視化す�
 
 ## セットアップ
 
-1. Chromeで `chrome://extensions/` を開く
-2. 右上の「デベロッパーモード」をON
-3. `npm run build` を実行して `dist/` を生成
-4. 「パッケージ化されていない拡張機能を読み込む」をクリック
-5. `dist/` フォルダを選択
+1. [Releases](https://github.com/bagpack/poe2-merchant-history/releases) から最新の `extension-*.zip` をダウンロード
+2. ダウンロードしたzipを任意のフォルダへ展開
+3. Chromeで `chrome://extensions/` を開く
+4. 右上の「デベロッパーモード」をON
+5. 「パッケージ化されていない拡張機能を読み込む」をクリック
+6. zipを展開したフォルダを選択
 
 ## 開発者向けドキュメント
 
-開発手順（Dev Container、TypeScript構成、ビルド/検証コマンド）は以下に分離しています。  
+ソースからビルドする場合の手順（Dev Container、TypeScript構成、ビルド/検証コマンド）は以下に分離しています。  
 `docs/development.md`
 
 ## 使い方

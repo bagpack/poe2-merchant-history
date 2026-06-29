@@ -9,6 +9,7 @@ export async function launchExtensionContext() {
   const userDataDir = await mkdtemp(path.join(os.tmpdir(), "poe2mh-e2e-"));
   const context = await chromium.launchPersistentContext(userDataDir, {
     channel: "chromium",
+    acceptDownloads: true,
     headless: false,
     args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
   });

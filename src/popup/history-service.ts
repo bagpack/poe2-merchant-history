@@ -1,56 +1,29 @@
 import { getHostForLanguage, t } from "../i18n.js";
 import { openLeagueDb, requestToPromise } from "../shared.js";
-import type { HistoryResponsePayload, Language, LeagueOption, TradeRecord } from "./types.js";
+import type {
+  HistoryResponsePayload,
+  Language,
+  LeagueOption,
+  TradeRecord,
+  UpdateRequestSource,
+} from "./types.js";
 
-interface TradePageConfig {
-  leagues?: LeagueOption[];
+interface LeagueApiResponse {
+  result?: Array<LeagueOption & { realm?: string }>;
 }
 
-function extractObjectLiteral(source: string, marker: string): string {
-  const markerIndex = source.indexOf(marker);
-  if (markerIndex === -1) {
-    throw new Error("Failed to parse trade config");
-  }
-  let index = source.indexOf("{", markerIndex);
-  if (index === -1) {
-    throw new Error("Failed to parse trade config");
+async function loadLeaguesFromApi(host: string): Promise<LeagueOption[]> {
+  const response = await fetch(`https://${host}/api/trade2/data/leagues`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    return [];
   }
 
-  let depth = 0;
-  let endIndex = -1;
-  for (; index < source.length; index += 1) {
-    const char = source[index];
-    if (char === "{") {
-      depth += 1;
-    } else if (char === "}") {
-      depth -= 1;
-      if (depth === 0) {
-        endIndex = index + 1;
-        break;
-      }
-    }
-  }
-
-  if (endIndex === -1) {
-    throw new Error("Failed to parse trade config");
-  }
-
-  return source.slice(source.indexOf("{", markerIndex), endIndex);
-}
-
-function extractTradeConfig(html: string): TradePageConfig {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  const scripts = Array.from(doc.querySelectorAll("script"));
-  const target = scripts
-    .map((script) => script.textContent || "")
-    .find((text) => text.includes('require(["trade"]') && text.includes("leagues"));
-
-  if (!target) {
-    throw new Error("Failed to load trade config");
-  }
-
-  const configText = extractObjectLiteral(target, "t(");
-  return JSON.parse(configText) as TradePageConfig;
+  const payload = (await response.json()) as LeagueApiResponse;
+  return (payload.result || [])
+    .filter((league) => league.realm === undefined || league.realm === "poe2")
+    .map((league) => ({ id: league.id, text: league.text }));
 }
 
 export class HistoryService {
@@ -58,15 +31,12 @@ export class HistoryService {
 
   async loadLeagues(): Promise<LeagueOption[]> {
     const host = getHostForLanguage(this.languageProvider());
-    const response = await fetch(`https://${host}/trade2/history`, {
-      credentials: "include",
-    });
-    if (!response.ok) {
+    const leagues = await loadLeaguesFromApi(host);
+    if (leagues.length === 0) {
       throw new Error(t(this.languageProvider(), "modalLeagueFetchFailed"));
     }
-    const html = await response.text();
-    const config = extractTradeConfig(html);
-    return config.leagues || [];
+
+    return leagues;
   }
 
   async loadRecords(leagueId: string): Promise<TradeRecord[]> {
@@ -84,11 +54,15 @@ export class HistoryService {
       .sort((a, b) => (b._timeMs || 0) - (a._timeMs || 0));
   }
 
-  async requestUpdate(leagueId: string): Promise<HistoryResponsePayload> {
+  async requestUpdate(
+    leagueId: string,
+    requestSource: UpdateRequestSource
+  ): Promise<HistoryResponsePayload> {
     return chrome.runtime.sendMessage({
       type: "updateHistory",
       leagueId,
       language: this.languageProvider(),
+      requestSource,
     }) as Promise<HistoryResponsePayload>;
   }
 

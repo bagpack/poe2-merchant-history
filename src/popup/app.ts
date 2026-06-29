@@ -227,7 +227,7 @@ export class PopupApp {
     this.dom.refreshButton.disabled = true;
     const leagueId = this.dom.leagueSelect.value;
     try {
-      const response = await this.historyService.requestUpdate(leagueId);
+      const response = await this.historyService.requestUpdate(leagueId, "user");
       if (!response?.ok) {
         this.showModal(
           t(this.state.getCurrentLanguage(), "modalErrorTitle"),
