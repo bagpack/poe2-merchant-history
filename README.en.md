@@ -1,48 +1,38 @@
 # PoE2 Merchant History
 
-Chrome extension that stores Path of Exile 2 merchant sales history per league and visualizes it with charts and tables. Data is kept locally for aggregation and comparison.
+A Chrome extension for managing Path of Exile 2 sales and purchases.
 
-[日本語README](README.md)
+[日本語](README.md)
 
-## Key Features
+## Features
 
-- Fetch and switch league list
-- Manual refresh to pull history (adds diffs only, limited to once per minute)
-- Daily and currency line charts
-- Currency totals summary
-- History list (search, pagination, detail modal)
-- Export history list to CSV
-- Cookie status display (options)
+- Search sales and review currency totals and charts
+- Organize purchase candidates and mark them as purchased, with 30-second undo
+- View item details, export history, and back up data
+- English and Japanese support
 
-## Setup
+Instant-purchase actions on the official trade site add candidates. Confirm the purchase outcome manually.
 
-1. Download the latest `extension-*.zip` from [Releases](https://github.com/bagpack/poe2-merchant-history/releases)
-2. Extract the downloaded zip to any folder
-3. Open `chrome://extensions/` in Chrome
-4. Enable Developer Mode
-5. Click "Load unpacked"
-6. Select the extracted folder
+## Install
 
-## Development Docs
+1. Download `extension-*.zip` from [Releases](https://github.com/bagpack/poe2-merchant-history/releases) and extract it
+2. Open `chrome://extensions/` and enable Developer Mode
+3. Click "Load unpacked" and select the extracted folder
 
-Build-from-source and development details are maintained in Japanese only:  
-`docs/development.md`
+Sign in to the official site, open the extension, select a league, and click "Refresh" to fetch sales history.
 
-## Usage
+## Screenshots
 
-1. Click the extension icon to open the tab
-2. Select a league
-3. Click the "Update" button to fetch history
-4. Review history in charts, totals, and list
+Images use sample data. Published releases may differ in appearance or features.
 
-## Notes
+### Sales History
 
-- Requires the `jp.pathofexile.com` login cookie (POESESSID)
-- Fetching is limited to once per minute
-- The official API only returns about the latest 100 records, so periodic saves are useful
-- Data is stored per league in IndexedDB and kept indefinitely
+![Sales history](docs/images/dashboard-en.png)
 
-## Screenshot
+### Purchase History
 
-![Dashboard](docs/images/dashboard.png)
-![Item Detail Sample](docs/images/details.png)
+![Purchase history](docs/images/purchase-history-en.png)
+
+### Item Details
+
+![Item details](docs/images/details-en.png)

@@ -1,48 +1,38 @@
 # PoE2 Merchant History
 
-PoE2の売上履歴をリーグ別に保存し、グラフと表で可視化するChrome拡張です。履歴をローカルに保持し、集計・比較を可能にします。
+Path of Exile 2の販売・購入履歴を管理するChrome拡張です。
 
-[English README](README.en.md)
+[English](README.en.md)
 
-## 主な機能
+## できること
 
-- リーグ一覧の取得と切り替え
-- 手動更新で履歴を取得（差分のみ追加、1分に1回の制限）
-- 日次・通貨別の折れ線グラフ
-- 通貨別合計の表示
-- 履歴一覧（検索、ページング、詳細モーダル）
-- 履歴一覧をCSVで出力
-- Cookie状態の表示（options）
+- 販売履歴を検索し、通貨別の総計・グラフを確認
+- 購入候補を整理し、購入済みに変更（30秒以内なら取り消し可能）
+- アイテム詳細の表示、履歴の出力、バックアップ
+- 日本語・英語に対応
 
-## セットアップ
+購入候補は公式トレードサイトの即時購入操作で追加されます。購入結果は手動で確定してください。
 
-1. [Releases](https://github.com/bagpack/poe2-merchant-history/releases) から最新の `extension-*.zip` をダウンロード
-2. ダウンロードしたzipを任意のフォルダへ展開
-3. Chromeで `chrome://extensions/` を開く
-4. 右上の「デベロッパーモード」をON
-5. 「パッケージ化されていない拡張機能を読み込む」をクリック
-6. zipを展開したフォルダを選択
+## インストール
 
-## 開発者向けドキュメント
+1. [Releases](https://github.com/bagpack/poe2-merchant-history/releases) の `extension-*.zip` をダウンロードして展開
+2. Chromeで `chrome://extensions/` を開き、「デベロッパーモード」をON
+3. 「パッケージ化されていない拡張機能を読み込む」から展開したフォルダを選択
 
-ソースからビルドする場合の手順（Dev Container、TypeScript構成、ビルド/検証コマンド）は以下に分離しています。  
-`docs/development.md`
+公式サイトにログイン後、拡張アイコンからリーグを選び、「更新」で販売履歴を取得できます。
 
-## 使い方
+## 画面
 
-1. 拡張アイコンをクリックしてタブを開く
-2. リーグを選択
-3. 「更新」ボタンで履歴を取得
-4. グラフ・総計・一覧で履歴を確認
+画像はサンプルデータです。配布版とは表示や機能が異なる場合があります。
 
-## 注意点
+### 販売履歴
 
-- 取得には `jp.pathofexile.com` のログインCookie（POESESSID）が必要です
-- 取得は1分に1回の制限があります
-- 公式APIは直近の約100件までしか取得できないため、定期的に更新して履歴を保存しておくと便利です
-- データはリーグごとにIndexedDBへ保存され、無期限で保持されます
+![販売履歴](docs/images/dashboard.png)
 
-## スクリーンショット
+### 購入履歴
 
-![ダッシュボード](docs/images/dashboard.png)
-![アイテム詳細サンプル](docs/images/details.png)
+![購入履歴](docs/images/purchase-history.png)
+
+### アイテム詳細
+
+![アイテム詳細](docs/images/details.png)
