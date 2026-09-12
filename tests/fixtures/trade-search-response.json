@@ -1,0 +1,35 @@
+{
+  "result": [
+    {
+      "id": "listing-result-1",
+      "item": {
+        "id": "item-1",
+        "name": "",
+        "typeLine": "Sapphire Ring",
+        "ilvl": 82,
+        "futureFieldAddedByGGG": {
+          "value": 123,
+          "nested": ["a", "b"]
+        }
+      },
+      "listing": {
+        "indexed": "2026-08-10T12:00:00Z",
+        "price": {
+          "amount": 1,
+          "currency": "exalted",
+          "type": "~price"
+        },
+        "account": {
+          "name": "seller-account"
+        },
+        "whisper_token": "do-not-persist-this-token"
+      }
+    },
+    {
+      "id": "listing-result-without-item-id",
+      "item": {
+        "typeLine": "Invalid item"
+      }
+    }
+  ]
+}

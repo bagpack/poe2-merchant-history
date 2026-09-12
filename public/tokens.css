@@ -1,0 +1,78 @@
+/* Hallmark · designed-as-app · design-system: docs/DESIGN.md
+ * pre-emit critique: P5 H4 E4 S5 R5 V4
+ */
+:root {
+  color-scheme: dark;
+  --masthead: #080a0e;
+  --masthead-text: #f1e4c2;
+  --masthead-muted: #b6b6b6;
+  --masthead-active: #ead9af;
+  --on-accent: #181818;
+  --chart-grid: #484337;
+  --bg: #0c1017;
+  --card: #181a1e;
+  --ink: #e8e2d6;
+  --muted: #b6b6b6;
+  --accent: #ead9af;
+  --accent-hover: #f1e4c2;
+  --accent-active: #cbb581;
+  --accent-soft: #302b20;
+  --border: #484337;
+  --control-border: #837053;
+  --danger: #ef9a91;
+  --danger-soft: #34201f;
+  --success: #a8c68c;
+  --focus: #ead9af;
+  --row-hover: #24231f;
+  --control-radius: 6px;
+  --surface-radius: 8px;
+  --font-body: system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
+  --shadow: none;
+  --button-shadow: none;
+  --backdrop: rgba(18, 16, 13, 0.6);
+
+  --chart-0: #ead9af;
+  --chart-1: #c58f4f;
+  --chart-2: #b6b6b6;
+  --chart-3: #8aaff0;
+  --chart-4: #d2b88b;
+  --chart-5: #92bba6;
+  --chart-6: #8aabd3;
+  --chart-7: #be9e86;
+  --chart-8: #b8a0d8;
+  --chart-9: #9cb2bd;
+  --chart-10: #dfaa83;
+  --chart-11: #b7c48b;
+
+  --tooltip-accent-normal-rgb: 210, 210, 210;
+  --tooltip-accent-magic-rgb: 136, 136, 255;
+  --tooltip-accent-rare-rgb: 255, 255, 119;
+  --tooltip-accent-unique-rgb: 175, 96, 37;
+  --tooltip-text: rgb(123, 135, 147);
+  --tooltip-value: rgb(245, 247, 250);
+  --tooltip-magic: rgb(138, 138, 255);
+  --tooltip-enchanted: rgb(179, 179, 255);
+  --tooltip-fractured: rgb(163, 145, 98);
+  --tooltip-corrupted: rgb(173, 52, 64);
+  --tooltip-desecrated: rgb(0, 187, 127);
+  --tooltip-flavor: rgb(177, 98, 37);
+  --tooltip-socket-link: rgb(96, 109, 123);
+  --tooltip-surface: rgba(19, 26, 32, 0.95);
+  --tooltip-divider: rgba(123, 135, 147, 0.2);
+  --tooltip-close-bg: rgba(0, 0, 0, 0.35);
+  --tooltip-close-bg-hover: rgba(0, 0, 0, 0.7);
+  --tooltip-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --tooltip-icon-shadow: drop-shadow(0 0 6px rgba(0, 0, 0, 0.45));
+  --socket-border: rgba(123, 135, 147, 0.5);
+  --socket-surface: radial-gradient(circle at 45% 35%, rgba(14, 18, 22, 0.95), rgba(4, 6, 8, 0.95));
+  --socket-ring: 0 0 0 1px rgba(4, 6, 8, 0.7);
+  --socket-default-inset: inset 0 0 0 1px rgba(245, 247, 250, 0.08);
+  --socket-gem-inset: inset 0 0 0 1px rgba(138, 138, 255, 0.7);
+  --socket-support-inset: inset 0 0 0 1px rgba(245, 247, 250, 0.7);
+  --socket-rune-inset: inset 0 0 0 1px rgba(0, 187, 127, 0.75);
+}
+
+html,
+body {
+  overflow-x: clip;
+}

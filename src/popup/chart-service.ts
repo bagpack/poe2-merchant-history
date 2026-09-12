@@ -1,22 +1,20 @@
 import { buildCurrencyOrder, formatDateKey } from "./formatters.js";
 import type { ChartCtor, ChartDataset, ChartLike, TradeRecord } from "./types.js";
 
-const currencyColorMap = new Map<string, string>([
-  ["divine", "#b64b2a"],
-  ["exalted", "#c58f4f"],
-  ["chaos", "#6e5d4a"],
-  ["annul", "#2f4b7c"],
-  ["regal", "#8a5c2e"],
-  ["alchemy", "#4f7b6a"],
-  ["chance", "#3d5a80"],
-  ["scour", "#795548"],
-  ["transmute", "#9c27b0"],
-  ["alteration", "#607d8b"],
-  ["augmentation", "#ff7043"],
-  ["wisdom", "#7e8b3a"],
-]);
-
-const fallbackColors = ["#4a2c0f", "#b64b2a", "#6e5d4a", "#c58f4f"];
+const currencies = [
+  "divine",
+  "exalted",
+  "chaos",
+  "annul",
+  "regal",
+  "alchemy",
+  "chance",
+  "scour",
+  "transmute",
+  "alteration",
+  "augmentation",
+  "wisdom",
+];
 
 declare global {
   interface Window {
@@ -51,6 +49,9 @@ export class ChartService {
     const labels = Array.from(daily.keys()).sort();
     const orderedCurrencies = buildCurrencyOrder(records);
 
+    const theme = getComputedStyle(this.canvas);
+    const textColor = theme.getPropertyValue("--muted").trim();
+    const gridColor = theme.getPropertyValue("--chart-grid").trim();
     let fallbackIndex = 0;
     const datasets = orderedCurrencies
       .map((currency) => {
@@ -58,8 +59,9 @@ export class ChartService {
         if (data.every((value) => value === 0)) {
           return null;
         }
-        const color =
-          currencyColorMap.get(currency) || fallbackColors[fallbackIndex++ % fallbackColors.length];
+        const knownIndex = currencies.indexOf(currency);
+        const colorIndex = knownIndex >= 0 ? knownIndex : fallbackIndex++ % currencies.length;
+        const color = theme.getPropertyValue(`--chart-${colorIndex}`).trim();
         const dataset: ChartDataset = {
           label: currency,
           data,
@@ -87,16 +89,21 @@ export class ChartService {
         plugins: {
           legend: {
             position: "bottom",
+            labels: { color: textColor },
           },
         },
         scales: {
           x: {
+            grid: { color: gridColor },
             ticks: {
               maxTicksLimit: 6,
+              color: textColor,
             },
           },
           y: {
             beginAtZero: true,
+            ticks: { color: textColor },
+            grid: { color: gridColor },
           },
         },
       },

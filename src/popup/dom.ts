@@ -11,6 +11,8 @@ function requireElement<T extends Element>(id: string, ctor: { new (): T }): T {
 export function getPopupDom(): PopupDom {
   // Why: fail-fast here keeps runtime errors near bootstrap instead of scattered null checks.
   return {
+    purchasePendingCount: requireElement("purchase-pending-count", HTMLElement),
+    purchasePendingList: requireElement("purchase-pending-list", HTMLUListElement),
     leagueSelect: requireElement("league-select", HTMLSelectElement),
     refreshButton: requireElement("refresh-btn", HTMLButtonElement),
     languageSelect: requireElement("language-select", HTMLSelectElement),
@@ -26,11 +28,13 @@ export function getPopupDom(): PopupDom {
     modalTitle: requireElement("modal-title", HTMLElement),
     modalMessage: requireElement("modal-message", HTMLElement),
     modalClose: requireElement("modal-close", HTMLButtonElement),
-    detailModal: requireElement("detail-modal", HTMLElement),
+    detailModal: requireElement("detail-modal", HTMLDialogElement),
+    detailClose: requireElement("detail-close", HTMLButtonElement),
     detailTitle: requireElement("detail-title", HTMLElement),
     detailSubtitle: requireElement("detail-subtitle", HTMLElement),
     detailBody: requireElement("detail-body", HTMLElement),
     detailCard: requireElement("detail-card", HTMLElement),
     chartCanvas: requireElement("sales-chart", HTMLCanvasElement),
+    chartSection: requireElement("sales-chart-section", HTMLElement),
   };
 }

@@ -1,8 +1,6 @@
 .DS_Store
 Thumbs.db
 
-.agent/
-
 # build artifacts
 *.log
 

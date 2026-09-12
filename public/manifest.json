@@ -4,7 +4,11 @@
   "version": "0.1.0",
   "description": "__MSG_extDescription__",
   "permissions": ["storage", "cookies"],
-  "host_permissions": ["https://jp.pathofexile.com/*", "https://pathofexile.com/*"],
+  "host_permissions": [
+    "https://www.pathofexile.com/*",
+    "https://jp.pathofexile.com/*",
+    "https://pathofexile.com/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -18,6 +22,28 @@
   "action": {
     "default_title": "__MSG_extTitle__"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.pathofexile.com/trade2/*",
+        "https://jp.pathofexile.com/trade2/*",
+        "https://pathofexile.com/trade2/*"
+      ],
+      "js": ["network-main.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.pathofexile.com/trade2/*",
+        "https://jp.pathofexile.com/trade2/*",
+        "https://pathofexile.com/trade2/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    }
+  ],
   "options_page": "options.html",
   "default_locale": "en",
   "content_security_policy": {

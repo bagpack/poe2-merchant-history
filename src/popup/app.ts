@@ -6,6 +6,7 @@ import {
   t,
 } from "../i18n.js";
 import { migrateLegacyDbIfNeeded } from "../shared.js";
+import { isPurchaseHistoryChangedMessage } from "../purchase/messages.js";
 import { ChartService } from "./chart-service.js";
 import { DetailRenderer } from "./detail-renderer.js";
 import { getPopupDom } from "./dom.js";
@@ -14,6 +15,7 @@ import { HistoryService } from "./history-service.js";
 import { PopupState } from "./state.js";
 import { TableRenderer } from "./table-renderer.js";
 import type { HistoryErrorMeta, Language, LeagueOption, TradeRecord } from "./types.js";
+import type { PurchaseRecord } from "../purchase/types.js";
 
 export class PopupApp {
   private readonly dom = getPopupDom();
@@ -38,6 +40,7 @@ export class PopupApp {
       const storedLanguage = await loadUiLanguage();
       this.dom.languageSelect.value = storedLanguage;
       this.applyLanguage(storedLanguage);
+      await this.refreshPurchaseSummary();
 
       const leagues = await this.historyService.loadLeagues();
       this.setOptions(leagues);
@@ -63,18 +66,18 @@ export class PopupApp {
   }
 
   private bindEvents(): void {
+    chrome.runtime.onMessage.addListener((message: unknown) => {
+      if (!isPurchaseHistoryChangedMessage(message)) {
+        return;
+      }
+      void this.refreshPurchaseSummary();
+    });
     this.dom.modalClose.addEventListener("click", () => this.hideModal());
     this.dom.modal.addEventListener("click", (event) => {
       if (event.target === this.dom.modal) {
         this.hideModal();
       }
     });
-    this.dom.detailModal.addEventListener("click", (event) => {
-      if (event.target === this.dom.detailModal) {
-        this.detailRenderer.hideDetail();
-      }
-    });
-
     this.dom.leagueSelect.addEventListener("change", async () => {
       this.historyService.storeSelectedLeague(this.dom.leagueSelect.value);
       this.state.setCurrentPage(1);
@@ -132,6 +135,30 @@ export class PopupApp {
     });
   }
 
+  private async refreshPurchaseSummary(): Promise<void> {
+    let pending: PurchaseRecord[] = [];
+    try {
+      const response = (await chrome.runtime.sendMessage({ type: "purchase/list" })) as {
+        ok?: boolean;
+        data?: PurchaseRecord[];
+      };
+      pending = response.ok
+        ? (response.data ?? []).filter((record) => record.status === "pending")
+        : [];
+    } catch (_error) {
+      // Keep the existing sales UI usable when the optional purchase summary fails.
+    }
+    this.dom.purchasePendingCount.textContent = String(pending.length);
+    this.dom.purchasePendingList.replaceChildren(
+      ...pending.slice(0, 5).map((record) => {
+        const item = document.createElement("li");
+        item.textContent = record.summary.displayName;
+        return item;
+      })
+    );
+    this.dom.purchasePendingList.hidden = pending.length === 0;
+  }
+
   private setOptions(leagues: LeagueOption[]): void {
     this.dom.leagueSelect.innerHTML = "";
     leagues.forEach((league) => {
@@ -182,7 +209,11 @@ export class PopupApp {
       }
       const pill = document.createElement("div");
       pill.className = "total-pill";
-      pill.textContent = `${currency}: ${totals.get(currency)}`;
+      const name = document.createElement("span");
+      name.textContent = currency;
+      const amount = document.createElement("strong");
+      amount.textContent = String(totals.get(currency));
+      pill.append(name, amount);
       this.dom.totalsContainer.appendChild(pill);
     });
   }
@@ -192,8 +223,11 @@ export class PopupApp {
     this.state.setRecords(records);
     this.renderTotals(records);
 
-    const nextChart = this.chartService.render(records, this.state.getChart());
-    this.state.setChart(nextChart);
+    this.dom.chartSection.hidden = records.length === 0;
+    if (records.length > 0) {
+      const nextChart = this.chartService.render(records, this.state.getChart());
+      this.state.setChart(nextChart);
+    }
     this.tableRenderer.renderTable(records);
   }
 

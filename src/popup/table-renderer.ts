@@ -33,13 +33,20 @@ export class TableRenderer {
     pageRecords.forEach((record) => {
       const row = document.createElement("tr");
       const displayName = formatItemName(record);
-      row.innerHTML = `
-      <td>${formatDateTime(record.time, this.languageProvider())}</td>
-      <td>${displayName}</td>
-      <td>${record.currency ?? ""}</td>
-      <td>${record.amount ?? ""}</td>
-    `;
-      row.addEventListener("click", () => this.onSelectRecord(record));
+      const itemCell = document.createElement("td");
+      const detailButton = document.createElement("button");
+      detailButton.type = "button";
+      detailButton.className = "item-detail-trigger";
+      detailButton.textContent = displayName;
+      detailButton.setAttribute("aria-haspopup", "dialog");
+      detailButton.addEventListener("click", () => this.onSelectRecord(record));
+      itemCell.appendChild(detailButton);
+      row.append(
+        createCell(formatDateTime(record.time, this.languageProvider())),
+        itemCell,
+        createCell(record.currency),
+        createCell(record.amount)
+      );
       this.dom.historyBody.appendChild(row);
     });
 
@@ -47,4 +54,10 @@ export class TableRenderer {
     this.dom.prevPageButton.disabled = this.pageProvider() <= 1;
     this.dom.nextPageButton.disabled = this.pageProvider() >= totalPages;
   }
+}
+
+function createCell(value: unknown): HTMLTableCellElement {
+  const cell = document.createElement("td");
+  cell.textContent = value === null || value === undefined ? "" : String(value);
+  return cell;
 }

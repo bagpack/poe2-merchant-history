@@ -1,0 +1,423 @@
+/* Hallmark · modern-minimal · filter ledger · design-system: docs/DESIGN.md · designed-as-app */
+@import url("./workspace.css");
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr)) auto;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--surface-radius);
+  background: var(--card);
+}
+
+.filter-reset {
+  align-self: end;
+  white-space: nowrap;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.export-actions,
+.destructive-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.actions {
+  display: grid;
+  align-items: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 290px;
+  min-width: 290px;
+  gap: 6px;
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.purchase-list-wrapper {
+  overflow: auto;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.purchase-list {
+  --purchase-columns: minmax(220px, 2fr) repeat(7, minmax(100px, 1fr)) 290px;
+
+  display: grid;
+  width: 100%;
+  min-width: 1210px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.purchase-list-header,
+.purchase-row {
+  display: grid;
+  grid-template-columns: var(--purchase-columns);
+}
+
+.purchase-list-header > [role="columnheader"],
+.purchase-row > [role="cell"] {
+  padding: 12px 9px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.purchase-row > [role="cell"] {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.item-column,
+.item-cell {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+  background: var(--card);
+}
+
+.purchase-row > .item-cell {
+  white-space: normal;
+}
+
+.actions-column,
+.actions {
+  position: sticky;
+  z-index: 1;
+  right: 0;
+  background: var(--card);
+  box-shadow: -1px 0 var(--border);
+}
+
+.status {
+  font-weight: 700;
+}
+
+.actions button {
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 7px;
+  font-size: 12px;
+}
+
+.actions button.danger {
+  margin-inline-start: 0;
+}
+
+.actions button[data-action="delete"] {
+  grid-column: 2;
+}
+
+.actions button:only-child {
+  grid-column: 1 / -1;
+}
+
+.empty {
+  padding: 32px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-align: center;
+}
+
+.empty[hidden] {
+  display: none;
+}
+
+.page-status {
+  min-height: 1.5em;
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+
+.page-status.is-error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.undo-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--focus);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.undo-notice[hidden] {
+  display: none;
+}
+
+.undo-progress {
+  position: relative;
+  width: 52px;
+  height: 52px;
+}
+
+.undo-progress svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.undo-progress-track,
+.undo-progress-value {
+  fill: none;
+  stroke-width: 3;
+}
+
+.undo-progress-track {
+  stroke: var(--border);
+}
+
+.undo-progress-value {
+  stroke: var(--focus);
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--undo-progress, 100));
+  transition: stroke-dashoffset 200ms linear;
+}
+
+.undo-progress span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--focus);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.undo-copy {
+  min-width: 0;
+}
+
+.undo-message {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.undo-remaining {
+  margin-top: 3px;
+  color: var(--focus);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.undo-button {
+  min-width: 92px;
+  border-color: var(--focus) !important;
+  color: var(--focus) !important;
+  background: var(--card) !important;
+  font-weight: 700;
+}
+
+.undo-button:hover {
+  border-color: var(--focus) !important;
+  color: var(--on-accent) !important;
+  background: var(--focus) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .undo-progress-value {
+    transition: none;
+  }
+}
+
+.modal {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--backdrop);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 420px;
+}
+
+@media (width >= 1260px) {
+  .purchase-row > [role="cell"]:not(.actions) {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-direction: column;
+  }
+}
+
+@media (width < 1260px) {
+  .filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar-actions {
+    justify-content: space-between;
+  }
+
+  .purchase-list-wrapper {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .purchase-list,
+  #purchase-history-body {
+    display: block;
+    min-width: 0;
+  }
+
+  .purchase-list-header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .purchase-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--surface-radius);
+    background: var(--card);
+  }
+
+  .purchase-row > [role="cell"] {
+    display: block;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+
+  .purchase-row > [role="cell"]:not(.item-cell, .actions)::before {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--muted);
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .item-column,
+  .item-cell,
+  .actions-column,
+  .actions {
+    position: static;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .purchase-row > .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: auto;
+    min-width: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .purchase-row > .item-cell,
+  .purchase-row > .actions {
+    grid-column: 1 / -1;
+  }
+
+  .actions button {
+    white-space: nowrap;
+  }
+
+  .actions button.danger {
+    margin-inline-start: 0;
+  }
+
+  .filter-reset {
+    width: 100%;
+  }
+}
+
+@media (width <= 600px) {
+  .undo-notice {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .undo-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .filters,
+  .purchase-row,
+  .purchase-row > .actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions button[data-action="delete"] {
+    grid-column: auto;
+  }
+}
+
+.purchase-list-header {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.purchase-list-header > [role="columnheader"] {
+  background: var(--bg);
+}
+
+.purchase-row:hover > [role="cell"] {
+  background: var(--row-hover);
+}
+
+.purchase-row .status {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (width <= 600px) {
+  .toolbar-actions {
+    gap: 16px;
+  }
+}
+
+.purchase-row a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}

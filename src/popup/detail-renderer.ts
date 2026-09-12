@@ -1,6 +1,13 @@
 import { t } from "../i18n.js";
-import type { DisplayLine, ItemDetails, Language, MetaLine, TradeRecord } from "./types.js";
-import type { PopupDom } from "./types.js";
+import type {
+  DisplayLine,
+  ItemDetailDom,
+  ItemDetails,
+  Language,
+  MetaLine,
+  StyledTextLine,
+  TradeRecord,
+} from "./types.js";
 
 interface SocketPoint {
   x: number;
@@ -16,36 +23,63 @@ function isMetaLine(line: DisplayLine): line is MetaLine {
   return typeof line === "object" && line !== null && "label" in line;
 }
 
+function isStyledTextLine(line: DisplayLine): line is StyledTextLine {
+  return typeof line === "object" && line !== null && "text" in line;
+}
+
+interface DisplaySource {
+  description?: string;
+  flags?: { desecrated?: boolean; fractured?: boolean };
+  name?: string;
+  values?: Array<[string] | string>;
+}
+
+function toDisplayText(item: unknown): string | null {
+  if (!item) {
+    return null;
+  }
+  if (typeof item === "string") {
+    return item;
+  }
+  if (typeof item !== "object") {
+    return String(item);
+  }
+  const source = item as DisplaySource;
+  const description = String(source.description || "").trim();
+  if (description) {
+    return description;
+  }
+  const name = source.name ? String(source.name).trim() : "";
+  const values = (source.values || [])
+    .map((value) => (Array.isArray(value) ? value[0] : String(value)))
+    .filter(Boolean)
+    .join(", ");
+  return name && values ? `${name}: ${values}` : name || values || null;
+}
+
 function toDisplayLines(items: unknown[] | undefined): string[] {
+  return Array.isArray(items)
+    ? items.map(toDisplayText).filter((line): line is string => Boolean(line))
+    : [];
+}
+
+function toModDisplayLines(items: unknown[] | undefined): DisplayLine[] {
   if (!Array.isArray(items)) {
     return [];
   }
   return items
-    .map((item) => {
-      if (!item) {
+    .map((item): DisplayLine | null => {
+      const text = toDisplayText(item);
+      if (!text) {
         return null;
       }
-      if (typeof item === "string") {
-        return item;
+      const source = typeof item === "object" && item !== null ? (item as DisplaySource) : null;
+      if (source?.flags?.desecrated) {
+        return { text, kind: "desecrated" };
       }
-      if (typeof item !== "object") {
-        return String(item);
-      }
-      const source = item as { name?: string; values?: Array<[string] | string> };
-      const name = source.name ? String(source.name).trim() : "";
-      const values = (source.values || [])
-        .map((value) => (Array.isArray(value) ? value[0] : String(value)))
-        .filter(Boolean)
-        .join(", ");
-      if (name && values) {
-        return `${name}: ${values}`;
-      }
-      if (name) {
-        return name;
-      }
-      return values || null;
+      return source?.flags?.fractured ? { text, kind: "fractured" } : text;
     })
-    .filter((line): line is string => Boolean(line));
+    .filter((line): line is DisplayLine => line !== null);
 }
 
 function toLogbookLines(items: ItemDetails["logbookMods"]): string[] {
@@ -129,6 +163,9 @@ function buildRequirementsLines(requirements: ItemDetails["requirements"]): Disp
 }
 
 function resolveLineTone(line: DisplayLine, fallbackTone: string): string {
+  if (isStyledTextLine(line)) {
+    return line.kind;
+  }
   if (typeof line === "object" && line.kind === "item-level") {
     return "muted";
   }
@@ -240,10 +277,10 @@ function buildGemSocketsLines(detail: ItemDetails, language: Language): DisplayL
 }
 
 function buildDesecratedSectionLines(detail: ItemDetails, language: Language): DisplayLine[] {
-  const lines = toDisplayLines(detail.desecratedMods);
+  const lines: DisplayLine[] = toDisplayLines(detail.desecratedMods);
   const isDesecrated = detail.desecrated || detail.isDesecrated || detail.is_desecrated;
   if (isDesecrated && !lines.length) {
-    lines.push(t(language, "detailDesecratedMods"));
+    lines.push({ text: t(language, "detailDesecratedMods"), kind: "desecrated-label" });
   }
   return lines;
 }
@@ -389,7 +426,12 @@ function appendRequiresValue(parent: HTMLElement, valueText: string): void {
   });
 }
 
-function appendSection(body: HTMLElement, lines: DisplayLine[], tone: string): void {
+function appendSection(
+  body: HTMLElement,
+  lines: DisplayLine[],
+  tone: string,
+  language: Language
+): void {
   const filtered = (lines || []).filter(
     (line) => line !== null && line !== undefined && line !== ""
   );
@@ -400,8 +442,15 @@ function appendSection(body: HTMLElement, lines: DisplayLine[], tone: string): v
   section.className = `detail-section detail-section-${tone}`;
   filtered.forEach((line) => {
     const p = document.createElement("p");
-    p.className = `item-line item-line-${resolveLineTone(line, tone)}`;
-    if (isMetaLine(line)) {
+    const lineTone = resolveLineTone(line, tone);
+    p.className = `item-line item-line-${lineTone}`;
+    if (isStyledTextLine(line)) {
+      p.textContent = line.text;
+      if (lineTone === "desecrated" || lineTone === "fractured") {
+        const labelKey = lineTone === "desecrated" ? "detailDesecratedMod" : "detailFracturedMod";
+        p.setAttribute("aria-label", `${t(language, labelKey)}: ${line.text}`);
+      }
+    } else if (isMetaLine(line)) {
       const label = document.createElement("span");
       label.className = "item-line-label";
       label.textContent = line.label;
@@ -508,16 +557,34 @@ function buildRuneSectionLines(detail: ItemDetails): string[] {
 }
 
 export class DetailRenderer {
+  private previousFocus: HTMLElement | null = null;
+
   constructor(
-    private readonly dom: PopupDom,
+    private readonly dom: ItemDetailDom,
     private readonly languageProvider: () => Language
-  ) {}
+  ) {
+    this.dom.detailClose.addEventListener("click", () => this.hideDetail());
+    this.dom.detailModal.addEventListener("click", (event) => {
+      if (event.target === this.dom.detailModal) {
+        this.hideDetail();
+      }
+    });
+    this.dom.detailModal.addEventListener("close", () => {
+      this.dom.detailModal.classList.add("hidden");
+      this.restoreFocus();
+    });
+  }
 
   showDetail(record: TradeRecord): void {
+    this.showItem(record.details_json || {}, record.item_name || "");
+  }
+
+  showItem(detail: ItemDetails, fallbackName: string): void {
+    this.previousFocus =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const language = this.languageProvider();
-    const detail = record.details_json || {};
     const name = detail.name?.trim() || "";
-    const typeLine = detail.typeLine?.trim() || record.item_name || "";
+    const typeLine = detail.typeLine?.trim() || fallbackName;
     const title = name || typeLine || "-";
     const subtitle = name && typeLine ? typeLine : detail.baseType?.trim() || "";
 
@@ -532,29 +599,69 @@ export class DetailRenderer {
       this.dom.detailBody.appendChild(visualSection);
     }
 
-    appendSection(this.dom.detailBody, buildPropertySectionLines(detail, language), "muted");
-    appendSection(this.dom.detailBody, buildGemSocketsLines(detail, language), "muted");
-    appendSection(this.dom.detailBody, buildRequirementsLines(detail.requirements), "muted");
-    appendSection(this.dom.detailBody, toDisplayLines(detail.enchantMods), "enchanted");
-    appendSection(this.dom.detailBody, toDisplayLines(detail.implicitMods), "magic");
-    appendSection(this.dom.detailBody, buildRuneSectionLines(detail), "enchanted");
-    appendSection(this.dom.detailBody, toDisplayLines(detail.fracturedMods), "fractured");
-    appendSection(this.dom.detailBody, toDisplayLines(detail.explicitMods), "magic");
-    appendSection(this.dom.detailBody, buildDesecratedSectionLines(detail, language), "desecrated");
-    appendSection(this.dom.detailBody, toLogbookLines(detail.logbookMods), "muted");
+    appendSection(
+      this.dom.detailBody,
+      buildPropertySectionLines(detail, language),
+      "muted",
+      language
+    );
+    appendSection(this.dom.detailBody, buildGemSocketsLines(detail, language), "muted", language);
+    appendSection(
+      this.dom.detailBody,
+      buildRequirementsLines(detail.requirements),
+      "muted",
+      language
+    );
+    appendSection(
+      this.dom.detailBody,
+      toModDisplayLines(detail.enchantMods),
+      "enchanted",
+      language
+    );
+    appendSection(this.dom.detailBody, toModDisplayLines(detail.implicitMods), "magic", language);
+    appendSection(this.dom.detailBody, buildRuneSectionLines(detail), "enchanted", language);
+    appendSection(
+      this.dom.detailBody,
+      toModDisplayLines(detail.fracturedMods),
+      "fractured",
+      language
+    );
+    appendSection(this.dom.detailBody, toModDisplayLines(detail.explicitMods), "magic", language);
+    appendSection(
+      this.dom.detailBody,
+      buildDesecratedSectionLines(detail, language),
+      "desecrated",
+      language
+    );
+    appendSection(this.dom.detailBody, toLogbookLines(detail.logbookMods), "muted", language);
 
     const corruptionStatus = getCorruptionLabel(detail, language);
     if (corruptionStatus) {
-      appendSection(this.dom.detailBody, [corruptionStatus], "corrupted");
+      appendSection(this.dom.detailBody, [corruptionStatus], "corrupted", language);
     }
     if (!this.dom.detailBody.children.length) {
-      appendSection(this.dom.detailBody, [t(language, "detailNone")], "muted");
+      appendSection(this.dom.detailBody, [t(language, "detailNone")], "muted", language);
     }
 
-    this.dom.detailModal.classList.remove("hidden");
+    if (!this.dom.detailModal.open) {
+      this.dom.detailModal.classList.remove("hidden");
+      this.dom.detailModal.showModal();
+    }
+    this.dom.detailClose.focus();
   }
 
   hideDetail(): void {
-    this.dom.detailModal.classList.add("hidden");
+    if (this.dom.detailModal.open) {
+      this.dom.detailModal.close();
+      return;
+    }
+    this.restoreFocus();
+  }
+
+  private restoreFocus(): void {
+    if (this.previousFocus?.isConnected) {
+      this.previousFocus.focus();
+    }
+    this.previousFocus = null;
   }
 }

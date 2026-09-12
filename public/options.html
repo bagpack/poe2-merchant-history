@@ -3,32 +3,62 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="cookieTitle">Cookie状態</title>
+    <title data-i18n="settingsTitle">設定</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <main class="options">
-      <header>
-        <h1 data-i18n="cookieTitle">Cookie状態</h1>
-        <p data-i18n="cookieDesc">PoE2の履歴取得に必要なCookieを確認します。</p>
+    <div class="site-masthead">
+      <div class="masthead-inner">
+        <a class="brand" href="popup.html">PoE2 <span>Merchant History</span></a>
+        <nav aria-label="Main navigation" data-i18n-aria-label="mainNavigation">
+          <a href="popup.html" data-i18n="tableTitle">Sales history</a>
+          <a href="purchase-history.html" data-i18n="purchaseHistoryTitle">Purchase History</a>
+          <a href="options.html" data-i18n="settingsTitle" aria-current="page">Settings</a>
+        </nav>
+      </div>
+    </div>
+
+    <main class="workspace options">
+      <header class="page-heading">
+        <h1 data-i18n="settingsTitle">設定</h1>
+        <p data-i18n="settingsDesc">接続状態とバックアップを管理します。</p>
       </header>
 
-      <section class="card">
-        <div id="cookie-list"></div>
-        <button id="refresh-cookies" data-i18n="cookieButtonRefresh">再取得</button>
-      </section>
+      <div class="settings-grid">
+        <section class="card">
+          <h2 data-i18n="cookieTitle">Cookie状態</h2>
+          <p data-i18n="cookieDesc">PoE2の履歴取得に必要なCookieを確認します。</p>
+          <div id="cookie-list"></div>
+          <button id="refresh-cookies" data-i18n="cookieButtonRefresh">再取得</button>
+        </section>
 
-      <section class="card">
-        <h2 data-i18n="backupTitle">バックアップ / 復元</h2>
-        <p data-i18n="backupDesc">
-          拡張ID変更時に備えて storage と IndexedDB をエクスポート/インポートします。
-        </p>
-        <div class="actions">
-          <button id="export-backup" data-i18n="backupExport">バックアップ出力</button>
-          <button id="import-backup" data-i18n="backupImport">バックアップ読込</button>
-        </div>
-        <p id="backup-status" class="backup-status"></p>
-      </section>
+        <section class="card">
+          <h2 data-i18n="backupTitle">バックアップ / 復元</h2>
+          <p data-i18n="backupDesc">
+            拡張ID変更時に備えて、設定・販売履歴・購入履歴をエクスポート/インポートします。
+          </p>
+          <div class="backup-actions">
+            <div class="export-zone">
+              <button id="export-backup" class="secondary-action" data-i18n="backupExport">
+                バックアップ出力
+              </button>
+            </div>
+            <div class="restore-zone">
+              <p
+                id="backup-restore-warning"
+                class="backup-warning"
+                data-i18n="backupRestoreWarning"
+              >
+                復元すると現在の設定・販売履歴・購入履歴を置き換えます。
+              </p>
+              <button id="import-backup" class="danger" data-i18n="backupImport">
+                バックアップから復元
+              </button>
+            </div>
+          </div>
+          <p id="backup-status" class="backup-status" role="status" aria-live="polite"></p>
+        </section>
+      </div>
     </main>
 
     <script type="module" src="options.js"></script>

@@ -1,0 +1,292 @@
+/* Hallmark · component: item-detail · design-system: docs/DESIGN.md */
+.detail-body {
+  display: grid;
+  gap: 3.75px;
+  max-height: min(calc(100dvh - 96px), 780px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 7.5px 0;
+  font-size: 15px;
+  line-height: 21px;
+}
+
+.modal-tooltip {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+dialog.modal {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: min(380px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  height: fit-content;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  overscroll-behavior: contain;
+  background: transparent;
+}
+
+dialog.modal::backdrop {
+  background: var(--backdrop);
+}
+
+.detail-close {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: auto;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--tooltip-text);
+  border-radius: var(--control-radius);
+  color: var(--tooltip-value);
+  background: var(--tooltip-close-bg);
+  box-shadow: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.detail-close:hover {
+  background: var(--tooltip-close-bg-hover);
+}
+
+.detail-close:active {
+  transform: translateY(1px);
+}
+
+.detail-close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.item-detail-trigger {
+  min-height: 24px;
+  white-space: normal;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--accent);
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.item-detail-trigger:hover {
+  color: var(--danger);
+  background: transparent;
+}
+
+.item-detail-trigger:active {
+  color: var(--accent-active);
+  background: transparent;
+}
+
+.item-detail-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.item-detail-trigger:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  background: transparent;
+}
+
+.detail-close:focus-visible {
+  outline: 3px solid var(--tooltip-value);
+  outline-offset: 3px;
+}
+
+.item-tooltip {
+  position: relative;
+  width: 378px;
+  max-width: 100%;
+  border: 1px solid rgba(var(--tooltip-accent-rgb), 0.75);
+  border-radius: 3.75px;
+  color: var(--tooltip-text);
+  background: var(--tooltip-surface);
+  box-shadow: var(--tooltip-shadow);
+  --tooltip-accent-rgb: var(--tooltip-accent-normal-rgb);
+}
+
+.item-tooltip[data-rarity="normal"] {
+  --tooltip-accent-rgb: var(--tooltip-accent-normal-rgb);
+}
+
+.item-tooltip[data-rarity="magic"] {
+  --tooltip-accent-rgb: var(--tooltip-accent-magic-rgb);
+}
+
+.item-tooltip[data-rarity="rare"] {
+  --tooltip-accent-rgb: var(--tooltip-accent-rare-rgb);
+}
+
+.item-tooltip[data-rarity="unique"] {
+  --tooltip-accent-rgb: var(--tooltip-accent-unique-rgb);
+}
+
+.item-tooltip-header {
+  min-height: 44px;
+  padding: 7.5px 84px;
+  border-bottom: 1px solid rgba(var(--tooltip-accent-rgb), 0.75);
+  background: rgba(var(--tooltip-accent-rgb), 0.125);
+  text-align: center;
+}
+
+.item-tooltip-header h3,
+.item-tooltip-header p {
+  margin: 0;
+  color: rgb(var(--tooltip-accent-rgb));
+  font-size: 16.875px;
+  font-weight: 700;
+  line-height: 21.0938px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+@media (width <= 400px) {
+  .item-tooltip-header {
+    padding: 42px 12px 7.5px;
+  }
+}
+
+.detail-section {
+  margin: 0;
+  padding: 0 7.5px;
+}
+
+.detail-section-visual {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.detail-section + .detail-section {
+  padding-top: 3.75px;
+  border-top: 1px solid var(--tooltip-divider);
+}
+
+.item-icon {
+  width: auto;
+  max-width: 110px;
+  height: auto;
+  max-height: 180px;
+  object-fit: contain;
+  filter: var(--tooltip-icon-shadow);
+}
+
+.item-visual {
+  position: relative;
+  display: inline-block;
+}
+
+.socket-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.socket-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 14px;
+}
+
+.socket-node {
+  position: absolute;
+  top: var(--socket-y, 50%);
+  left: var(--socket-x, 50%);
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--socket-border);
+  border-radius: 999px;
+  background: var(--socket-surface);
+  box-shadow: var(--socket-default-inset), var(--socket-ring);
+}
+
+.socket-link {
+  margin: 0 2px;
+  color: var(--tooltip-socket-link);
+  font-size: 10px;
+}
+
+.socket-row .socket-node {
+  position: static;
+  transform: none;
+}
+
+.socket-gem {
+  box-shadow: var(--socket-gem-inset), var(--socket-ring);
+}
+
+.socket-support {
+  box-shadow: var(--socket-support-inset), var(--socket-ring);
+}
+
+.socket-rune {
+  box-shadow: var(--socket-rune-inset), var(--socket-ring);
+}
+
+.item-line {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 21px;
+  text-align: center;
+}
+
+.item-line-muted,
+.item-line-label,
+.item-line-separator {
+  color: var(--tooltip-text);
+}
+
+.item-line-value {
+  color: var(--tooltip-value);
+}
+
+.item-line-magic {
+  color: var(--tooltip-magic);
+}
+
+.item-line-enchanted {
+  color: var(--tooltip-enchanted);
+}
+
+.item-line-fractured {
+  color: var(--tooltip-fractured);
+}
+
+.item-line-corrupted,
+.item-line-desecrated-label {
+  color: var(--tooltip-corrupted);
+}
+
+.item-line-desecrated {
+  color: var(--tooltip-desecrated);
+}
+
+.item-line-flavor {
+  color: var(--tooltip-flavor);
+  font-style: italic;
+}

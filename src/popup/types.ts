@@ -109,9 +109,25 @@ export interface MetaLine {
   kind?: string;
 }
 
-export type DisplayLine = string | MetaLine;
+export interface StyledTextLine {
+  text: string;
+  kind: string;
+}
 
-export interface PopupDom {
+export type DisplayLine = string | MetaLine | StyledTextLine;
+
+export interface ItemDetailDom {
+  detailModal: HTMLDialogElement;
+  detailClose: HTMLButtonElement;
+  detailTitle: HTMLElement;
+  detailSubtitle: HTMLElement;
+  detailBody: HTMLElement;
+  detailCard: HTMLElement;
+}
+
+export interface PopupDom extends ItemDetailDom {
+  purchasePendingCount: HTMLElement;
+  purchasePendingList: HTMLUListElement;
   leagueSelect: HTMLSelectElement;
   refreshButton: HTMLButtonElement;
   languageSelect: HTMLSelectElement;
@@ -127,12 +143,8 @@ export interface PopupDom {
   modalTitle: HTMLElement;
   modalMessage: HTMLElement;
   modalClose: HTMLButtonElement;
-  detailModal: HTMLElement;
-  detailTitle: HTMLElement;
-  detailSubtitle: HTMLElement;
-  detailBody: HTMLElement;
-  detailCard: HTMLElement;
   chartCanvas: HTMLCanvasElement;
+  chartSection: HTMLElement;
 }
 
 export interface ChartDataset {

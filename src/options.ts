@@ -144,7 +144,11 @@ class BackupService {
     const databases = await indexedDB.databases();
     return databases
       .map((db) => db.name)
-      .filter((name): name is string => typeof name === "string" && name.startsWith(this.dbPrefix));
+      .filter(
+        (name): name is string =>
+          typeof name === "string" &&
+          (name.startsWith(this.dbPrefix) || name === "poe2-purchase-history")
+      );
   }
 
   private async dumpDatabase(dbName: string): Promise<BackupDbDef> {
@@ -391,6 +395,7 @@ class OptionsPageController {
   }
 
   private async handleExport(): Promise<void> {
+    this.setBusy(this.exportButton, true);
     try {
       this.setBackupStatus("");
       const payload = await this.backupService.exportBackup();
@@ -399,14 +404,21 @@ class OptionsPageController {
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown error";
       this.setBackupStatus(t(this.currentLanguage, "backupFailed", { message }), true);
+    } finally {
+      this.setBusy(this.exportButton, false);
     }
   }
 
   private async handleImport(): Promise<void> {
+    this.setBusy(this.importButton, true);
     try {
       this.setBackupStatus("");
       const payload = await this.backupService.pickBackupFile();
-      if (!confirm(`Import backup from ${payload.extensionId}?`)) {
+      if (
+        !confirm(
+          t(this.currentLanguage, "backupConfirmImport", { extensionId: payload.extensionId })
+        )
+      ) {
         return;
       }
       // Why: importing overwrites local extension data by design, so we keep it behind
@@ -417,7 +429,14 @@ class OptionsPageController {
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown error";
       this.setBackupStatus(t(this.currentLanguage, "backupFailed", { message }), true);
+    } finally {
+      this.setBusy(this.importButton, false);
     }
+  }
+
+  private setBusy(button: HTMLButtonElement, busy: boolean): void {
+    button.disabled = busy;
+    button.toggleAttribute("aria-busy", busy);
   }
 
   private async loadCookies(): Promise<void> {

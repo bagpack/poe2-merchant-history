@@ -1,5 +1,11 @@
 import { openLeagueDb, requestToPromise, transactionComplete } from "./shared.js";
 import { getAcceptLanguage, getHostForLanguage } from "./i18n.js";
+import {
+  handlePurchaseHistoryMessage,
+  isPurchaseCandidateMessage,
+  savePurchaseCandidate,
+} from "./purchase/background-handler.js";
+import { parsePurchaseHistoryMessage } from "./purchase/messages.js";
 
 const REQUIRED_COOKIES = ["POESESSID"] as const;
 
@@ -298,6 +304,45 @@ const updateService = new HistoryUpdateService(
 );
 
 chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+  if (isPurchaseCandidateMessage(message)) {
+    savePurchaseCandidate(message)
+      .then((record) => {
+        notifyPurchaseHistoryChanged();
+        sendResponse({ ok: true, data: record });
+      })
+      .catch((error: unknown) =>
+        sendResponse({
+          ok: false,
+          error: {
+            code: "PURCHASE_SAVE_FAILED",
+            message: error instanceof Error ? error.message : "Unexpected error.",
+          },
+        })
+      );
+    return true;
+  }
+
+  const purchaseHistoryMessage = parsePurchaseHistoryMessage(message);
+  if (purchaseHistoryMessage) {
+    handlePurchaseHistoryMessage(purchaseHistoryMessage)
+      .then((data) => {
+        if (purchaseHistoryMessage.type !== "purchase/list") {
+          notifyPurchaseHistoryChanged(readUndoToken(data));
+        }
+        sendResponse({ ok: true, data });
+      })
+      .catch((error: unknown) =>
+        sendResponse({
+          ok: false,
+          error: {
+            code: "PURCHASE_HISTORY_FAILED",
+            message: error instanceof Error ? error.message : "Unexpected error.",
+          },
+        })
+      );
+    return true;
+  }
+
   if (
     typeof message === "object" &&
     message !== null &&
@@ -337,6 +382,24 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
   sendResponse({ ok: false, error: { code: "UNKNOWN", message: "Unknown request." } });
   return false;
 });
+
+function notifyPurchaseHistoryChanged(undoToken?: string): void {
+  void chrome.runtime
+    .sendMessage({ type: "purchase/changed", ...(undoToken ? { undoToken } : {}) })
+    .catch(() => undefined);
+}
+
+function readUndoToken(value: unknown): string | undefined {
+  if (typeof value !== "object" || value === null || !Object.hasOwn(value, "undo")) {
+    return undefined;
+  }
+  const undo = (value as { undo?: unknown }).undo;
+  if (typeof undo !== "object" || undo === null || !Object.hasOwn(undo, "token")) {
+    return undefined;
+  }
+  const token = (undo as { token?: unknown }).token;
+  return typeof token === "string" && token.length > 0 ? token : undefined;
+}
 
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.create({ url: chrome.runtime.getURL("popup.html") });

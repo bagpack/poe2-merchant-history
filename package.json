@@ -1,6 +1,7 @@
 {
   "name": "poe2merchanthistory",
   "private": true,
+  "type": "module",
   "version": "0.1.0",
   "scripts": {
     "lint:eslint": "eslint playwright.config.js src/**/*.ts tests/**/*.js",
@@ -8,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "build:ts": "tsc -p tsconfig.json",
     "build": "vite build",
+    "test:unit": "npm run build:ts && node --test tests/unit/*.test.js",
     "format:check": "prettier --check \"**/*.{js,ts,css,html,json,md,yml,mjs}\"",
     "format": "prettier --write \"**/*.{js,ts,css,html,json,md,yml,mjs}\"",
     "lint": "npm run lint:eslint && npm run lint:style && npm run typecheck && npm run format:check",

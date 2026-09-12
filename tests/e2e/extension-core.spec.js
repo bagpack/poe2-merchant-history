@@ -27,6 +27,10 @@ const HISTORY_API_FIXTURE = {
   ],
 };
 
+const TRADE_SEARCH_API_FIXTURE = JSON.parse(
+  await readFile(new URL("../fixtures/trade-search-response.json", import.meta.url), "utf8")
+);
+
 test("options backup export includes storage and IndexedDB data", async () => {
   const extension = await launchExtensionContext();
 
@@ -66,11 +70,52 @@ test("options backup export includes storage and IndexedDB data", async () => {
         req.onerror = () => reject(req.error);
       });
     });
+    const purchaseResult = TRADE_SEARCH_API_FIXTURE.result[0];
+    expect(
+      await setupPage.evaluate(
+        (entry) =>
+          chrome.runtime.sendMessage({
+            type: "purchase/candidate",
+            payload: {
+              itemId: entry.item.id,
+              resultId: entry.id,
+              rawItem: entry.item,
+              listingSnapshot: {
+                resultId: entry.id,
+                price: entry.listing.price,
+                sellerAccount: entry.listing.account.name,
+                indexedAt: entry.listing.indexed,
+              },
+              source: {
+                pageUrl: "https://www.pathofexile.com/trade2/search/poe2/Standard/search-1",
+                fetchUrl: "https://www.pathofexile.com/api/trade2/fetch/item-1",
+                language: "en",
+              },
+              candidateAt: 1_000,
+            },
+          }),
+        purchaseResult
+      )
+    ).toMatchObject({ ok: true });
     await setupPage.close();
 
     const page = await extension.context.newPage();
     await page.goto(`chrome-extension://${extension.extensionId}/options.html`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("設定");
+    await expect(page.getByRole("heading", { level: 2, name: "Cookie状態" })).toBeVisible();
     await expect(page.getByRole("button", { name: "バックアップ出力" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "バックアップから復元" })).toBeVisible();
+    await expect(page.locator("#backup-restore-warning")).toContainText(
+      "現在の設定・販売履歴・購入履歴を置き換えます"
+    );
+    await expect(page.locator("#export-backup")).toHaveClass(/secondary-action/);
+    await expect(page.locator("#import-backup")).toHaveClass(/danger/);
+    await expect(page.locator(".restore-zone #backup-restore-warning")).toHaveCount(1);
+    await expect(page.locator(".restore-zone #import-backup")).toHaveCount(1);
+    await expect(page.locator(".restore-zone #export-backup")).toHaveCount(0);
+    await expect(page.locator("#backup-status")).toHaveAttribute("role", "status");
+    await expect(page.locator("body")).toHaveCSS("background-color", "rgb(12, 16, 23)");
+    await expect(page.locator("body")).toHaveCSS("font-family", /system-ui/);
 
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "バックアップ出力" }).click();
@@ -85,6 +130,30 @@ test("options backup export includes storage and IndexedDB data", async () => {
     expect(payload.dbs.some((db) => db.name === "poe2-trade-history-ja-fate_of_the_vaal")).toBe(
       true
     );
+    expect(payload.dbs.some((db) => db.name === "poe2-purchase-history")).toBe(true);
+
+    expect(
+      await page.evaluate(() => chrome.runtime.sendMessage({ type: "purchase/delete-all" }))
+    ).toMatchObject({ ok: true });
+    expect(
+      await page.evaluate(() => chrome.runtime.sendMessage({ type: "purchase/list" }))
+    ).toMatchObject({ ok: true, data: [] });
+
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    page.once("dialog", async (dialog) => {
+      expect(dialog.message()).toContain("バックアップを読み込みますか");
+      await dialog.accept();
+    });
+    await page.getByRole("button", { name: "バックアップから復元" }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(filePath);
+    await expect(page.locator("#backup-status")).toHaveText("完了");
+    expect(
+      await page.evaluate(() => chrome.runtime.sendMessage({ type: "purchase/list" }))
+    ).toMatchObject({
+      ok: true,
+      data: [{ itemId: purchaseResult.item.id, status: "pending" }],
+    });
   } finally {
     await extension.dispose();
   }
@@ -114,9 +183,78 @@ test("popup loads leagues and supports language switch", async () => {
 
     await expect(page.locator("#league-select option")).toHaveCount(2);
     await expect(page.locator("#league-select")).toContainText("Runes of Aldur");
+    await expect(page.locator(".chart-section")).toBeHidden();
 
     await page.selectOption("#language-select", "ja");
     await expect(page.locator("[data-i18n='labelLeague']")).toHaveText("リーグ");
+    await expect(page.locator("[data-i18n='appSubtitle']")).toHaveText("リーグ別の販売履歴を確認");
+    await expect(page.locator("#sales-history-title")).toHaveText("販売履歴");
+    await expect(page.getByLabel("アイテム名を検索")).toBeVisible();
+    await expect(page.getByLabel("1ページの表示件数")).toBeVisible();
+    await expect(page.locator("table")).toHaveCSS("font-variant-numeric", "tabular-nums");
+
+    for (const width of [320, 375, 414, 768]) {
+      await page.setViewportSize({ width, height: 720 });
+      const pageWidth = await page.evaluate(() => ({
+        client: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      expect(pageWidth.scroll).toBeLessThanOrEqual(pageWidth.client);
+      if (width === 320) {
+        const primaryControlHeights = await page
+          .locator("#league-select, #language-select, #refresh-btn, #open-purchase-history")
+          .evaluateAll((elements) =>
+            elements.map((element) => Math.round(element.getBoundingClientRect().height))
+          );
+        expect(Math.min(...primaryControlHeights)).toBeGreaterThanOrEqual(44);
+      }
+    }
+  } finally {
+    await extension.dispose();
+  }
+});
+
+test("sales item details use an accessible item-name trigger and dialog", async () => {
+  const extension = await launchExtensionContext();
+
+  try {
+    await extension.context.addCookies([
+      {
+        name: "POESESSID",
+        value: "test-session",
+        domain: "pathofexile.com",
+        path: "/",
+        secure: true,
+        httpOnly: true,
+        sameSite: "Lax",
+      },
+    ]);
+    await extension.context.route("https://pathofexile.com/api/trade2/data/leagues", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", json: LEAGUES_API_FIXTURE })
+    );
+    await extension.context.route(
+      "https://pathofexile.com/api/trade2/history/Runes%20of%20Aldur",
+      (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", json: HISTORY_API_FIXTURE })
+    );
+
+    const page = await extension.context.newPage();
+    await page.goto(`chrome-extension://${extension.extensionId}/popup.html`);
+    await page.getByRole("button", { name: "Refresh" }).click();
+    await page.locator("#modal-close").click();
+    await expect(page.locator(".chart-section")).toBeVisible();
+
+    const detailTrigger = page.getByRole("button", { name: "Test Item" });
+    await detailTrigger.focus();
+    await page.keyboard.press("Enter");
+
+    const dialog = page.getByRole("dialog", { name: "Test Item" });
+    await expect(dialog).toBeVisible();
+    await expect(page.locator("#detail-card > #detail-close")).toHaveCount(1);
+    await expect(page.locator("#detail-close")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(detailTrigger).toBeFocused();
   } finally {
     await extension.dispose();
   }
@@ -196,6 +334,81 @@ test("history update throttles automatic requests but not user requests", async 
     expect(firstAutomaticResponse.ok).toBe(true);
     expect(secondAutomaticResponse.ok).toBe(false);
     expect(secondAutomaticResponse.error.code).toBe("RATE_LIMIT");
+  } finally {
+    await extension.dispose();
+  }
+});
+
+test("purchase candidate is upserted once with its complete raw item and pending badge", async () => {
+  const extension = await launchExtensionContext();
+
+  try {
+    const page = await extension.context.newPage();
+    await page.goto(`chrome-extension://${extension.extensionId}/popup.html`);
+    const result = TRADE_SEARCH_API_FIXTURE.result[0];
+    const message = {
+      type: "purchase/candidate",
+      payload: {
+        itemId: result.item.id,
+        resultId: result.id,
+        rawItem: result.item,
+        listingSnapshot: {
+          resultId: result.id,
+          price: result.listing.price,
+          sellerAccount: result.listing.account.name,
+          indexedAt: result.listing.indexed,
+        },
+        source: {
+          pageUrl: "https://www.pathofexile.com/trade2/search/poe2/Standard/search-1",
+          fetchUrl: "https://www.pathofexile.com/api/trade2/fetch/item-1",
+          language: "en",
+        },
+        candidateAt: 1_000,
+      },
+    };
+
+    const firstResponse = await page.evaluate(
+      (candidate) => chrome.runtime.sendMessage(candidate),
+      message
+    );
+    const secondResponse = await page.evaluate(
+      (candidate) =>
+        chrome.runtime.sendMessage({
+          ...candidate,
+          payload: { ...candidate.payload, candidateAt: 2_000 },
+        }),
+      message
+    );
+    const records = await page.evaluate(
+      () =>
+        new Promise((resolve, reject) => {
+          const request = indexedDB.open("poe2-purchase-history");
+          request.onsuccess = () => {
+            const db = request.result;
+            const tx = db.transaction("purchases", "readonly");
+            const getAll = tx.objectStore("purchases").getAll();
+            getAll.onsuccess = () => resolve(getAll.result);
+            getAll.onerror = () => reject(getAll.error);
+          };
+          request.onerror = () => reject(request.error);
+        })
+    );
+    const badgeText = await page.evaluate(() => chrome.action.getBadgeText({}));
+
+    expect(firstResponse, JSON.stringify(firstResponse)).toMatchObject({ ok: true });
+    expect(secondResponse, JSON.stringify(secondResponse)).toMatchObject({ ok: true });
+    expect(records).toHaveLength(1);
+    expect(records[0].status).toBe("pending");
+    expect(records[0].candidateAt).toBe(1_000);
+    expect(records[0].updatedAt).toBe(2_000);
+    expect(records[0].schemaVersion).toBe(1);
+    expect(records[0]).not.toHaveProperty("attemptCount");
+    expect(records[0]).not.toHaveProperty("confirmationSource");
+    expect(records[0].rawItem.futureFieldAddedByGGG).toEqual({
+      value: 123,
+      nested: ["a", "b"],
+    });
+    expect(badgeText).toBe("1");
   } finally {
     await extension.dispose();
   }

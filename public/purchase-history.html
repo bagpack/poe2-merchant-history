@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="purchaseHistoryTitle">Purchase History</title>
+    <link rel="stylesheet" href="purchase-history.css" />
+    <link rel="stylesheet" href="item-detail.css" />
+  </head>
+  <body>
+    <div class="site-masthead">
+      <div class="masthead-inner">
+        <a class="brand" href="popup.html">PoE2 <span>Merchant History</span></a>
+        <nav aria-label="Main navigation" data-i18n-aria-label="mainNavigation">
+          <a href="popup.html" data-i18n="tableTitle">Sales history</a>
+          <a href="purchase-history.html" data-i18n="purchaseHistoryTitle" aria-current="page"
+            >Purchase History</a
+          >
+          <a href="options.html" data-i18n="settingsTitle">Settings</a>
+        </nav>
+      </div>
+    </div>
+
+    <main class="workspace purchase-workspace">
+      <header class="page-heading">
+        <div>
+          <h1 id="purchase-history-title" data-i18n="purchaseHistoryTitle">Purchase History</h1>
+          <p data-i18n="purchaseHistorySubtitle">
+            Purchase candidates are added automatically. Confirm the result manually.
+          </p>
+        </div>
+        <label>
+          <span data-i18n="labelLanguage">Language</span>
+          <select id="purchase-language">
+            <option value="en" data-i18n="languageEnglish">English</option>
+            <option value="ja" data-i18n="languageJapanese">日本語</option>
+          </select>
+        </label>
+      </header>
+
+      <section class="filters" aria-label="Filters" data-i18n-aria-label="purchaseFiltersLabel">
+        <label
+          ><span data-i18n="purchaseFilterStatus">Status</span
+          ><select id="purchase-status-filter"></select
+        ></label>
+        <label
+          ><span data-i18n="purchaseFilterName">Item name</span
+          ><input id="purchase-search" type="search"
+        /></label>
+        <label
+          ><span data-i18n="purchaseFilterLeague">League</span
+          ><select id="purchase-league-filter"></select
+        ></label>
+        <label
+          ><span data-i18n="purchaseFilterFrom">From</span
+          ><input id="purchase-date-from" type="date"
+        /></label>
+        <label
+          ><span data-i18n="purchaseFilterTo">To</span><input id="purchase-date-to" type="date"
+        /></label>
+        <button
+          id="clear-purchase-filters"
+          class="secondary-action filter-reset"
+          type="button"
+          data-i18n="purchaseClearFilters"
+        >
+          Clear filters
+        </button>
+      </section>
+
+      <section class="toolbar">
+        <div class="toolbar-actions">
+          <div class="export-actions">
+            <button id="export-purchase-csv" class="secondary-action" data-i18n="buttonCsv">
+              Export CSV
+            </button>
+            <button
+              id="export-purchase-json"
+              class="secondary-action"
+              data-i18n="purchaseExportJson"
+            >
+              Export JSON
+            </button>
+          </div>
+          <div class="destructive-actions">
+            <button id="delete-all-purchases" class="danger" data-i18n="purchaseDeleteAll">
+              Delete all purchase history
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <p
+        id="purchase-status"
+        class="page-status"
+        role="status"
+        aria-live="polite"
+        tabindex="-1"
+      ></p>
+      <section
+        id="purchase-undo"
+        class="undo-notice"
+        aria-describedby="purchase-undo-message purchase-undo-remaining"
+        hidden
+      >
+        <div class="undo-progress" aria-hidden="true">
+          <svg viewBox="0 0 36 36" focusable="false">
+            <circle class="undo-progress-track" cx="18" cy="18" r="15" pathLength="100"></circle>
+            <circle
+              id="purchase-undo-progress"
+              class="undo-progress-value"
+              cx="18"
+              cy="18"
+              r="15"
+              pathLength="100"
+            ></circle>
+          </svg>
+          <span id="purchase-undo-seconds"></span>
+        </div>
+        <div class="undo-copy">
+          <p id="purchase-undo-message" class="undo-message" role="status" aria-live="polite"></p>
+          <p id="purchase-undo-remaining" class="undo-remaining" aria-live="off"></p>
+        </div>
+        <button
+          id="purchase-undo-button"
+          class="secondary-action undo-button"
+          type="button"
+          aria-describedby="purchase-undo-message purchase-undo-remaining"
+        >
+          Undo
+        </button>
+      </section>
+      <p id="purchase-empty" class="empty" data-i18n="purchaseEmpty">No purchase history.</p>
+      <div id="purchase-list-wrapper" class="purchase-list-wrapper">
+        <div class="purchase-list" role="table" aria-labelledby="purchase-history-title">
+          <div class="purchase-list-header" role="row">
+            <div role="columnheader" class="item-column" data-i18n="purchaseColumnItem">Item</div>
+            <div role="columnheader" data-i18n="purchaseColumnStatus">Status</div>
+            <div role="columnheader" data-i18n="purchaseColumnCandidateAt">Candidate</div>
+            <div role="columnheader" data-i18n="purchaseColumnPurchasedAt">Purchased</div>
+            <div role="columnheader" data-i18n="purchaseColumnPrice">Price</div>
+            <div role="columnheader" data-i18n="purchaseColumnSeller">Seller</div>
+            <div role="columnheader" data-i18n="purchaseColumnLeague">League</div>
+            <div role="columnheader" data-i18n="purchaseColumnSearch">Search</div>
+            <div role="columnheader" class="actions-column" data-i18n="purchaseColumnActions">
+              Actions
+            </div>
+          </div>
+          <div id="purchase-history-body" role="rowgroup"></div>
+        </div>
+      </div>
+    </main>
+
+    <dialog id="detail-modal" class="modal hidden" aria-labelledby="detail-title">
+      <div class="modal-content modal-tooltip">
+        <article id="detail-card" class="item-tooltip" data-rarity="normal">
+          <button
+            id="detail-close"
+            class="detail-close"
+            type="button"
+            data-i18n-aria-label="detailClose"
+          >
+            <span aria-hidden="true">×</span>
+            <span data-i18n="detailClose">Close</span>
+          </button>
+          <header class="item-tooltip-header">
+            <h3 id="detail-title"></h3>
+            <p id="detail-subtitle"></p>
+          </header>
+          <div id="detail-body" class="detail-body"></div>
+        </article>
+      </div>
+    </dialog>
+
+    <script type="module" src="purchase-history.js"></script>
+  </body>
+</html>
