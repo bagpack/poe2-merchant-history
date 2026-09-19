@@ -139,7 +139,7 @@ export interface PopupDom extends ItemDetailDom {
   prevPageButton: HTMLButtonElement;
   nextPageButton: HTMLButtonElement;
   pageInfo: HTMLElement;
-  modal: HTMLElement;
+  modal: HTMLDialogElement;
   modalTitle: HTMLElement;
   modalMessage: HTMLElement;
   modalClose: HTMLButtonElement;

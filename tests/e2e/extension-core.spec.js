@@ -102,7 +102,7 @@ test("options backup export includes storage and IndexedDB data", async () => {
     const page = await extension.context.newPage();
     await page.goto(`chrome-extension://${extension.extensionId}/options.html`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("設定");
-    await expect(page.getByRole("heading", { level: 2, name: "Cookie状態" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "ログイン状態" })).toBeVisible();
     await expect(page.getByRole("button", { name: "バックアップ出力" })).toBeVisible();
     await expect(page.getByRole("button", { name: "バックアップから復元" })).toBeVisible();
     await expect(page.locator("#backup-restore-warning")).toContainText(
@@ -147,7 +147,7 @@ test("options backup export includes storage and IndexedDB data", async () => {
     await page.getByRole("button", { name: "バックアップから復元" }).click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(filePath);
-    await expect(page.locator("#backup-status")).toHaveText("完了");
+    await expect(page.locator("#backup-status")).toHaveText("バックアップを復元しました。");
     expect(
       await page.evaluate(() => chrome.runtime.sendMessage({ type: "purchase/list" }))
     ).toMatchObject({
@@ -191,7 +191,10 @@ test("popup loads leagues and supports language switch", async () => {
     await expect(page.locator("#sales-history-title")).toHaveText("販売履歴");
     await expect(page.getByLabel("アイテム名を検索")).toBeVisible();
     await expect(page.getByLabel("1ページの表示件数")).toBeVisible();
-    await expect(page.locator("table")).toHaveCSS("font-variant-numeric", "tabular-nums");
+    await expect(page.locator(".table-section table")).toHaveCSS(
+      "font-variant-numeric",
+      "tabular-nums"
+    );
 
     for (const width of [320, 375, 414, 768]) {
       await page.setViewportSize({ width, height: 720 });
@@ -241,7 +244,7 @@ test("sales item details use an accessible item-name trigger and dialog", async 
     const page = await extension.context.newPage();
     await page.goto(`chrome-extension://${extension.extensionId}/popup.html`);
     await page.getByRole("button", { name: "Refresh" }).click();
-    await page.locator("#modal-close").click();
+    await expect(page.locator("#sales-status")).toContainText("Total");
     await expect(page.locator(".chart-section")).toBeVisible();
 
     const detailTrigger = page.getByRole("button", { name: "Test Item" });

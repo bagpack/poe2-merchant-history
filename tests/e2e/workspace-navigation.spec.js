@@ -5,7 +5,7 @@ test("all workspace pages share localized, keyboard-accessible navigation", asyn
   const extension = await launchExtensionContext();
   try {
     await extension.context.route("**/api/trade2/data/leagues", (route) =>
-      route.fulfill({ json: { result: [] } })
+      route.fulfill({ json: { result: [{ id: "Standard", text: "Standard", realm: "poe2" }] } })
     );
     const page = await extension.context.newPage();
     await page.goto(`chrome-extension://${extension.extensionId}/options.html`);

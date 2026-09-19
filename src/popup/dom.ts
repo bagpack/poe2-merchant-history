@@ -24,7 +24,7 @@ export function getPopupDom(): PopupDom {
     prevPageButton: requireElement("prev-page", HTMLButtonElement),
     nextPageButton: requireElement("next-page", HTMLButtonElement),
     pageInfo: requireElement("page-info", HTMLElement),
-    modal: requireElement("modal", HTMLElement),
+    modal: requireElement("modal", HTMLDialogElement),
     modalTitle: requireElement("modal-title", HTMLElement),
     modalMessage: requireElement("modal-message", HTMLElement),
     modalClose: requireElement("modal-close", HTMLButtonElement),

@@ -1,7 +1,19 @@
 /* Hallmark · modern-minimal · split ledger overview · design-system: docs/DESIGN.md · designed-as-app */
 @import url("./workspace.css");
 
+.sales-workspace button,
+.sales-workspace input,
+.sales-workspace select {
+  scroll-margin-block: 180px;
+}
+
 .controls {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
   display: grid;
   grid-template-columns: minmax(0, 240px) minmax(0, 160px) auto;
   align-items: end;
@@ -235,8 +247,12 @@ tbody tr:hover {
 
 @media (width <= 480px) {
   .controls {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: stretch;
+  }
+
+  .controls > button {
+    grid-column: 1 / -1;
   }
 
   .table-controls {
@@ -275,4 +291,40 @@ tbody tr:hover {
   th:nth-child(4) {
     width: 15%;
   }
+}
+
+.notice-dialog {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--surface-radius);
+  color: var(--ink);
+  background: var(--card);
+}
+
+.notice-dialog::backdrop {
+  background: var(--backdrop);
+}
+
+.notice-dialog .modal-content {
+  width: auto;
+  padding: 0;
+}
+
+.notice-dialog h2 {
+  margin-bottom: 12px;
+}
+
+#sales-status {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+#sales-status:empty {
+  display: none;
+}
+
+#history-body td[colspan] {
+  text-align: left;
 }

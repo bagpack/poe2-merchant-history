@@ -17,6 +17,10 @@ import { getUndoProgress, getUndoSecondsRemaining } from "./purchase/undo.js";
 import { DetailRenderer } from "./popup/detail-renderer.js";
 import type { ItemDetails, Language } from "./popup/types.js";
 
+const compactLayout = window.matchMedia("(width < 1260px)");
+const advancedFilters = requireElement("purchase-advanced-filters", HTMLDetailsElement);
+const dateError = requireElement("purchase-date-error", HTMLElement);
+const resultCount = requireElement("purchase-result-count", HTMLElement);
 const body = requireElement("purchase-history-body", HTMLDivElement);
 const empty = requireElement("purchase-empty", HTMLElement);
 const listWrapper = requireElement("purchase-list-wrapper", HTMLElement);
@@ -71,6 +75,9 @@ async function init(): Promise<void> {
   languageSelect.value = language;
   applyLanguage();
   bindEvents();
+  advancedFilters.open = Boolean(
+    filterPreferences.league || filterPreferences.dateFrom || filterPreferences.dateTo
+  );
   try {
     await refresh();
     const latestUndo = await request<PurchaseUndoAction | null>({ type: "purchase/undo-current" });
@@ -83,6 +90,9 @@ async function init(): Promise<void> {
 }
 
 function bindEvents(): void {
+  compactLayout.addEventListener("change", () => {
+    if (!detailModal.open) render();
+  });
   chrome.runtime.onMessage.addListener((message: unknown) => {
     if (!isPurchaseHistoryChangedMessage(message)) {
       return;
@@ -198,9 +208,27 @@ function renderFilterOptions(): void {
 }
 
 function render(): void {
-  const visible = filteredRecords();
+  const invalidDates = Boolean(dateFrom.value && dateTo.value && dateFrom.value > dateTo.value);
+  dateError.hidden = !invalidDates;
+  dateError.textContent = invalidDates ? t(language, "purchaseDateInvalid") : "";
+  for (const input of [dateFrom, dateTo]) input.setAttribute("aria-invalid", String(invalidDates));
+  if (invalidDates) advancedFilters.open = true;
+  const visible = invalidDates ? [] : filteredRecords();
+  resultCount.textContent = t(language, "purchaseResultCount", {
+    visible: visible.length,
+    total: records.length,
+  });
+  for (const id of ["export-purchase-csv", "export-purchase-json"]) {
+    requireElement(id, HTMLButtonElement).disabled = invalidDates || visible.length === 0;
+  }
+  const list = listWrapper.querySelector(".purchase-list")!;
+  list.setAttribute("role", compactLayout.matches ? "list" : "table");
+  body.setAttribute("role", compactLayout.matches ? "presentation" : "rowgroup");
+  listWrapper
+    .querySelector(".purchase-list-header")!
+    .setAttribute("aria-hidden", String(compactLayout.matches));
   body.replaceChildren(...visible.map(renderRow));
-  empty.hidden = visible.length !== 0;
+  empty.hidden = invalidDates || visible.length !== 0;
   empty.textContent = t(language, records.length === 0 ? "purchaseEmpty" : "purchaseNoMatches");
   listWrapper.hidden = visible.length === 0;
   deleteAllButton.disabled = records.length === 0;
@@ -226,6 +254,18 @@ function renderRow(record: PurchaseRecord): HTMLDivElement {
   row.className = "purchase-row";
   row.setAttribute("role", "row");
   row.dataset.id = record.id;
+  if (compactLayout.matches) {
+    row.append(
+      itemCell(record),
+      cell(statusLabel(record.status), "status", "purchaseColumnStatus"),
+      cell(formatPrice(record), "price-cell", "purchaseColumnPrice"),
+      actionCell(record),
+      recordMetadata(record)
+    );
+    row.setAttribute("role", "listitem");
+    for (const child of Array.from(row.children)) child.removeAttribute("role");
+    return row;
+  }
   row.append(
     itemCell(record),
     cell(statusLabel(record.status), "status", "purchaseColumnStatus"),
@@ -238,6 +278,31 @@ function renderRow(record: PurchaseRecord): HTMLDivElement {
     actionCell(record)
   );
   return row;
+}
+
+function recordMetadata(record: PurchaseRecord): HTMLDivElement {
+  const target = cell("", "record-metadata");
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = t(language, "purchaseRecordMetadata");
+  const list = document.createElement("dl");
+  for (const [key, value] of [
+    ["purchaseColumnCandidateAt", formatDate(record.candidateAt)],
+    ["purchaseColumnPurchasedAt", formatDate(record.purchasedAt)],
+    ["purchaseColumnSeller", record.listingSnapshot.sellerAccount ?? "—"],
+    ["purchaseColumnLeague", record.league ?? "—"],
+  ]) {
+    const term = document.createElement("dt");
+    term.textContent = t(language, key);
+    const description = document.createElement("dd");
+    description.textContent = value;
+    list.append(term, description);
+  }
+  const source = linkCell(record.source.pageUrl);
+  source.removeAttribute("role");
+  details.append(summary, list, source);
+  target.append(details);
+  return target;
 }
 
 function itemCell(record: PurchaseRecord): HTMLDivElement {
@@ -363,6 +428,7 @@ function showUndo(action: PurchaseUndoAction, moveFocus = false): void {
   undoButton.hidden = false;
   undoButton.disabled = false;
   undoNotice.hidden = false;
+  document.documentElement.classList.add("has-undo");
   renderUndoNotice();
   if (moveFocus) {
     undoButton.focus({ preventScroll: true });
@@ -399,6 +465,7 @@ function renderUndoNotice(): void {
 
 function expireUndo(): void {
   clearUndoTimers();
+  if (document.activeElement === undoButton) focusRecord();
   undoAction = null;
   undoProgress.style.setProperty("--undo-progress", "0");
   undoSeconds.textContent = "—";
@@ -407,15 +474,23 @@ function expireUndo(): void {
   undoButton.hidden = true;
   undoButton.disabled = true;
   setPageStatus("purchaseUndoExpired");
-  if (document.activeElement === undoButton) {
-    pageStatus.focus({ preventScroll: true });
-  }
   undoHideTimerId = window.setTimeout(() => {
     undoNotice.hidden = true;
+    document.documentElement.classList.remove("has-undo");
   }, 3000);
 }
 
+function focusRecord(): void {
+  const id = undoAction?.recordId;
+  const row = Array.from(body.children).find((element) => element.getAttribute("data-id") === id);
+  const target = row?.querySelector<HTMLButtonElement>("button") ?? searchInput;
+  target.focus({ preventScroll: true });
+  target.scrollIntoView({ block: "nearest" });
+}
+
 function hideUndoNotice(): void {
+  if (document.activeElement === undoButton) focusRecord();
+  document.documentElement.classList.remove("has-undo");
   clearUndoTimers();
   undoAction = null;
   undoNotice.hidden = true;

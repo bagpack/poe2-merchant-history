@@ -94,6 +94,7 @@ button,
 
 select,
 input {
+  caret-color: var(--accent);
   width: 100%;
   color: var(--ink);
   background: var(--card);
@@ -283,4 +284,38 @@ input:disabled {
     flex-direction: column;
     gap: 16px;
   }
+}
+
+summary {
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--accent);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+summary:hover {
+  color: var(--accent-hover);
+}
+
+summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.page-feedback:not(:empty) {
+  margin-bottom: 16px;
+}
+
+.field-error {
+  color: var(--danger);
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+::selection {
+  color: var(--on-accent);
+  background: var(--accent);
 }

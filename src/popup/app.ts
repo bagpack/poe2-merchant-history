@@ -19,6 +19,7 @@ import type { PurchaseRecord } from "../purchase/types.js";
 
 export class PopupApp {
   private readonly dom = getPopupDom();
+  private modalPreviousFocus: HTMLElement | null = null;
   private readonly state = new PopupState();
   private readonly historyService = new HistoryService(() => this.state.getCurrentLanguage());
   private readonly detailRenderer = new DetailRenderer(this.dom, () =>
@@ -71,6 +72,11 @@ export class PopupApp {
         return;
       }
       void this.refreshPurchaseSummary();
+    });
+    this.dom.modal.addEventListener("close", () => {
+      const target = this.modalPreviousFocus;
+      if (target?.isConnected && !target.matches(":disabled")) target.focus();
+      else this.dom.refreshButton.focus();
     });
     this.dom.modalClose.addEventListener("click", () => this.hideModal());
     this.dom.modal.addEventListener("click", (event) => {
@@ -137,22 +143,28 @@ export class PopupApp {
 
   private async refreshPurchaseSummary(): Promise<void> {
     let pending: PurchaseRecord[] = [];
+    const errorNotice = document.getElementById("purchase-pending-error")!;
+    errorNotice.hidden = true;
     try {
       const response = (await chrome.runtime.sendMessage({ type: "purchase/list" })) as {
         ok?: boolean;
         data?: PurchaseRecord[];
       };
-      pending = response.ok
-        ? (response.data ?? []).filter((record) => record.status === "pending")
-        : [];
+      if (!response?.ok) throw new Error("Purchase summary unavailable");
+      pending = (response.data ?? []).filter((record) => record.status === "pending");
     } catch (_error) {
-      // Keep the existing sales UI usable when the optional purchase summary fails.
+      this.dom.purchasePendingCount.textContent = "—";
+      this.dom.purchasePendingList.hidden = true;
+      errorNotice.textContent = t(this.state.getCurrentLanguage(), "purchaseSummaryFailed");
+      errorNotice.hidden = false;
+      return;
     }
     this.dom.purchasePendingCount.textContent = String(pending.length);
     this.dom.purchasePendingList.replaceChildren(
       ...pending.slice(0, 5).map((record) => {
         const item = document.createElement("li");
-        item.textContent = record.summary.displayName;
+        const price = record.listingSnapshot.price;
+        item.textContent = `${record.summary.displayName}${price ? ` · ${price.amount} ${price.currency}` : ""}`;
         return item;
       })
     );
@@ -179,11 +191,18 @@ export class PopupApp {
   private showModal(title: string, message: string): void {
     this.dom.modalTitle.textContent = title;
     this.dom.modalMessage.textContent = message;
-    this.dom.modal.classList.remove("hidden");
+    if (!this.dom.modal.open) {
+      this.modalPreviousFocus =
+        document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+          ? document.activeElement
+          : this.dom.refreshButton;
+      this.dom.modal.showModal();
+    }
+    this.dom.modalClose.focus();
   }
 
   private hideModal(): void {
-    this.dom.modal.classList.add("hidden");
+    this.dom.modal.close();
   }
 
   private renderTotals(records: TradeRecord[]): void {
@@ -259,6 +278,9 @@ export class PopupApp {
 
   private async handleUpdate(): Promise<void> {
     this.dom.refreshButton.disabled = true;
+    this.dom.refreshButton.setAttribute("aria-busy", "true");
+    const status = document.getElementById("sales-status")!;
+    status.textContent = t(this.state.getCurrentLanguage(), "salesUpdating");
     const leagueId = this.dom.leagueSelect.value;
     try {
       const response = await this.historyService.requestUpdate(leagueId, "user");
@@ -273,10 +295,7 @@ export class PopupApp {
       const added = response.result?.addedCount ?? 0;
       const fetched = response.result?.fetchedCount ?? 0;
       const total = response.result?.totalCount ?? fetched;
-      this.showModal(
-        t(this.state.getCurrentLanguage(), "modalUpdatedTitle"),
-        t(this.state.getCurrentLanguage(), "updateResult", { total, added })
-      );
+      status.textContent = t(this.state.getCurrentLanguage(), "updateResult", { total, added });
     } catch (_error) {
       this.showModal(
         t(this.state.getCurrentLanguage(), "modalErrorTitle"),
@@ -284,6 +303,8 @@ export class PopupApp {
       );
     } finally {
       this.dom.refreshButton.disabled = false;
+      this.dom.refreshButton.removeAttribute("aria-busy");
+      if (this.dom.modal.open) status.textContent = "";
     }
   }
 

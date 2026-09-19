@@ -47,7 +47,7 @@ dialog.modal::backdrop {
   align-items: center;
   gap: 4px;
   width: auto;
-  min-height: 30px;
+  min-height: 44px;
   padding: 0 8px;
   border: 1px solid var(--tooltip-text);
   border-radius: var(--control-radius);
@@ -73,7 +73,7 @@ dialog.modal::backdrop {
 }
 
 .item-detail-trigger {
-  min-height: 24px;
+  min-height: 44px;
   white-space: normal;
   padding: 0;
   border: 0;
@@ -90,7 +90,7 @@ dialog.modal::backdrop {
 }
 
 .item-detail-trigger:hover {
-  color: var(--danger);
+  color: var(--accent-hover);
   background: transparent;
 }
 
@@ -151,7 +151,7 @@ dialog.modal::backdrop {
   text-align: center;
 }
 
-.item-tooltip-header h3,
+.item-tooltip-header h2,
 .item-tooltip-header p {
   margin: 0;
   color: rgb(var(--tooltip-accent-rgb));
@@ -164,7 +164,7 @@ dialog.modal::backdrop {
 
 @media (width <= 400px) {
   .item-tooltip-header {
-    padding: 42px 12px 7.5px;
+    padding: 48px 12px 7.5px;
   }
 }
 

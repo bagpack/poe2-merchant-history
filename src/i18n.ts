@@ -10,6 +10,35 @@ type MessagesByLanguage = {
 
 const MESSAGES: MessagesByLanguage = {
   en: {
+    backupExporting: "Preparing backup…",
+    backupChoosing: "Choose a backup file to restore.",
+    backupRestoring: "Validating and restoring backup… Keep this page open.",
+    backupCancelled: "Restore cancelled. Your data has not changed.",
+    backupExportFailed:
+      "Could not export the backup. Keep this page open and try Export Backup again. Your stored data has not changed.",
+    backupExportDone: "Backup exported. Keep the downloaded file in a safe place.",
+    backupImportDone: "Backup restored.",
+    cookieChecking: "Checking saved sign-in information…",
+
+    chartData: "Daily totals as a table",
+    purchaseSummaryFailed: "Could not load candidates. Open purchase history to retry.",
+    salesUpdating: "Updating sales history…",
+    salesEmpty:
+      "No sales saved for this league. Sign in on the official site, then select Refresh.",
+    salesNoMatches: "No matching items. Change or clear the search text.",
+    purchaseAdvancedFilters: "League and candidate dates",
+    purchaseDateInvalid: "The end date must be on or after the start date.",
+    purchaseResultCount: "{visible} shown / {total} records",
+    purchaseTools: "Export and delete",
+    purchaseExportCsv: "Export filtered CSV",
+    purchaseRecordMetadata: "Dates, seller and trade search",
+    purchaseHelpTitle: "How to record a purchase",
+    purchaseHelpBody:
+      "Instant purchase on the official trade site adds a candidate. Check the item and price, then mark it as purchased only after completing the trade. Delete candidates you did not buy. You can undo the latest confirmation or deletion for 30 seconds. Date filters use the candidate date.",
+    cookieGuidance:
+      "If missing, sign in on the official site, then return here and select Check again. A saved cookie does not guarantee a valid session; if fetching fails, sign in again.",
+    cookieLogin: "Sign in on the official site",
+
     mainNavigation: "Main navigation",
     appTitle: "PoE2 Merchant History",
     appSubtitle: "View sales history by league",
@@ -27,13 +56,13 @@ const MESSAGES: MessagesByLanguage = {
     purchaseFilterStatus: "Status",
     purchaseFilterName: "Item name",
     purchaseFilterLeague: "League",
-    purchaseFilterFrom: "From",
-    purchaseFilterTo: "To",
+    purchaseFilterFrom: "Candidate date from",
+    purchaseFilterTo: "Candidate date to",
     purchaseClearFilters: "Clear filters",
     purchaseFilterAll: "All",
     purchaseFiltersLabel: "Filters",
     purchaseBackToSales: "Back to sales history",
-    purchaseExportJson: "Export JSON",
+    purchaseExportJson: "Export filtered JSON",
     purchaseDeleteAll: "Delete all purchase history",
     purchaseEmpty:
       "No purchase history. Use instant purchase on the official trade site to add a candidate.",
@@ -107,8 +136,8 @@ const MESSAGES: MessagesByLanguage = {
     totalsEmpty: "No data.",
     modalErrorTitle: "Error",
     modalUpdatedTitle: "Updated",
-    modalUpdateFailed: "Update failed.",
-    modalLeagueFetchFailed: "Failed to load leagues.",
+    modalUpdateFailed: "Update failed. Check your connection and try Refresh again.",
+    modalLeagueFetchFailed: "Could not load leagues. Check your connection, then reload this page.",
     modalSelectLeague: "Please select a league.",
     modalNoExportData: "No data to export.",
     errorLeagueMismatch: "League mismatch. Expected: {expected} / Actual: {actual}",
@@ -124,9 +153,9 @@ const MESSAGES: MessagesByLanguage = {
     csvHeaderAmount: "Amount",
     settingsTitle: "Settings",
     settingsDesc: "Manage connection status and backups.",
-    cookieTitle: "Cookie Status",
+    cookieTitle: "Sign-in status",
     cookieDesc: "Check cookies required to fetch PoE2 history.",
-    cookieButtonRefresh: "Refresh",
+    cookieButtonRefresh: "Check again",
     cookieStatusOk: "Available (expires: {date})",
     cookieStatusMissing: "Missing",
     backupTitle: "Backup & Restore",
@@ -138,9 +167,39 @@ const MESSAGES: MessagesByLanguage = {
       "Restoring replaces the current settings, sales history, and purchase history.",
     backupConfirmImport: "Import this backup? Existing data is replaced. Source: {extensionId}",
     backupDone: "Completed",
-    backupFailed: "Failed: {message}",
+    backupFailed:
+      "Could not process the backup. Check that the file was exported by this extension, keep your original backup, and try again.",
   },
   ja: {
+    backupExporting: "バックアップを出力中…",
+    backupChoosing: "復元するバックアップファイルを選択してください。",
+    backupRestoring: "バックアップを検証・復元中です。この画面を閉じないでください。",
+    backupCancelled: "復元をキャンセルしました。データは変更していません。",
+    backupExportFailed:
+      "バックアップを出力できませんでした。この画面を開いたまま、もう一度「バックアップ出力」を押してください。保存データは変更していません。",
+    backupExportDone: "バックアップを出力しました。ダウンロードしたファイルを保管してください。",
+    backupImportDone: "バックアップを復元しました。",
+    cookieChecking: "保存されたログイン情報を確認中…",
+
+    chartData: "日別の集計を表で確認",
+    purchaseSummaryFailed: "候補を取得できませんでした。購入履歴を開いて再確認してください。",
+    salesUpdating: "販売履歴を更新中…",
+    salesEmpty:
+      "このリーグの販売履歴はまだありません。公式サイトにログインして「更新」を押してください。",
+    salesNoMatches: "一致するアイテムがありません。検索語を変更するか消してください。",
+    purchaseAdvancedFilters: "リーグ・候補登録日",
+    purchaseDateInvalid: "終了日は開始日以降にしてください。",
+    purchaseResultCount: "{total}件中 {visible}件を表示",
+    purchaseTools: "出力・全件削除",
+    purchaseExportCsv: "表示中をCSV出力",
+    purchaseRecordMetadata: "日時・出品者・トレード検索",
+    purchaseHelpTitle: "購入の記録方法",
+    purchaseHelpBody:
+      "公式トレードの即時購入で候補が追加されます。アイテムと価格を確認し、取引完了後に「購入済みにする」を押してください。買わなかった候補は削除できます。直前の確定・削除は30秒間取り消せます。日付条件は候補登録日が対象です。",
+    cookieGuidance:
+      "未取得の場合は公式サイトにログインし、この画面に戻って「再確認」を押してください。Cookieがあってもログインが失効していることがあります。履歴を取得できない場合は再ログインしてください。",
+    cookieLogin: "公式サイトにログイン",
+
     mainNavigation: "メインナビゲーション",
     appTitle: "PoE2 Merchant History",
     appSubtitle: "リーグ別の販売履歴を確認",
@@ -157,13 +216,13 @@ const MESSAGES: MessagesByLanguage = {
     purchaseFilterStatus: "状態",
     purchaseFilterName: "アイテム名",
     purchaseFilterLeague: "リーグ",
-    purchaseFilterFrom: "開始日",
-    purchaseFilterTo: "終了日",
+    purchaseFilterFrom: "候補登録日の開始",
+    purchaseFilterTo: "候補登録日の終了",
     purchaseClearFilters: "絞り込みを解除",
     purchaseFilterAll: "すべて",
     purchaseFiltersLabel: "絞り込み",
     purchaseBackToSales: "販売履歴へ戻る",
-    purchaseExportJson: "JSON出力",
+    purchaseExportJson: "表示中をJSON出力",
     purchaseDeleteAll: "購入履歴を全件削除",
     purchaseEmpty:
       "購入履歴はありません。公式トレードサイトで即時購入を行うと、購入候補が追加されます。",
@@ -237,8 +296,10 @@ const MESSAGES: MessagesByLanguage = {
     totalsEmpty: "データがありません。",
     modalErrorTitle: "エラー",
     modalUpdatedTitle: "更新完了",
-    modalUpdateFailed: "更新に失敗しました。",
-    modalLeagueFetchFailed: "リーグ一覧の取得に失敗しました。",
+    modalUpdateFailed:
+      "更新できませんでした。通信状態を確認して、もう一度「更新」を押してください。",
+    modalLeagueFetchFailed:
+      "リーグ一覧を取得できませんでした。通信状態を確認して、この画面を再読み込みしてください。",
     modalSelectLeague: "リーグを選択してください。",
     modalNoExportData: "エクスポートするデータがありません。",
     errorLeagueMismatch: "リーグが一致しません。期待: {expected} / 実際: {actual}",
@@ -254,9 +315,9 @@ const MESSAGES: MessagesByLanguage = {
     csvHeaderAmount: "個数",
     settingsTitle: "設定",
     settingsDesc: "接続状態とバックアップを管理します。",
-    cookieTitle: "Cookie状態",
+    cookieTitle: "ログイン状態",
     cookieDesc: "PoE2の履歴取得に必要なCookieを確認します。",
-    cookieButtonRefresh: "再取得",
+    cookieButtonRefresh: "再確認",
     cookieStatusOk: "取得済み (期限: {date})",
     cookieStatusMissing: "未取得",
     backupTitle: "バックアップ / 復元",
@@ -267,7 +328,8 @@ const MESSAGES: MessagesByLanguage = {
     backupConfirmImport:
       "バックアップを読み込みますか？現在のデータは置き換えられます。取得元: {extensionId}",
     backupDone: "完了",
-    backupFailed: "失敗: {message}",
+    backupFailed:
+      "バックアップを処理できませんでした。この拡張から出力したファイルか確認し、元のバックアップを保管して再試行してください。",
   },
 };
 

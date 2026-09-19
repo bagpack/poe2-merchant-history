@@ -96,7 +96,7 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
         scroll: document.documentElement.scrollWidth,
       }));
       expect(pageWidth.scroll).toBeLessThanOrEqual(pageWidth.client);
-      const clippedCells = await row.locator('[role="cell"]').evaluateAll((cells) =>
+      const clippedCells = await row.locator(".purchase-cell").evaluateAll((cells) =>
         cells
           .filter((cell) => {
             const box = cell.getBoundingClientRect();
@@ -107,7 +107,7 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
           .map((cell) => cell.textContent)
       );
       expect(clippedCells, `All purchase fields must fit at ${width}px`).toEqual([]);
-      const overlappingCells = await row.locator('[role="cell"]').evaluateAll((cells) => {
+      const overlappingCells = await row.locator(".purchase-cell").evaluateAll((cells) => {
         const boxes = cells.map((cell) => cell.getBoundingClientRect());
         return boxes.flatMap((box, index) =>
           boxes
@@ -189,6 +189,7 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await expect(row).toHaveCount(0);
     await page.selectOption("#purchase-status-filter", "pending");
     await page.fill("#purchase-search", "Sapphire");
+    await page.locator("#purchase-advanced-filters > summary").click();
     await page.selectOption("#purchase-league-filter", "Standard");
     await expect(row).toHaveCount(1);
     await page.fill("#purchase-date-from", "1970-01-01");
@@ -217,8 +218,9 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await expect(row).toHaveCount(1);
     await expect(clearFilters).toBeDisabled();
 
-    await expect(page.locator(".export-actions")).toContainText("Export CSV");
-    await expect(page.locator(".export-actions")).toContainText("Export JSON");
+    await page.locator(".purchase-tools > summary").click();
+    await expect(page.locator(".export-actions")).toContainText("Export filtered CSV");
+    await expect(page.locator(".export-actions")).toContainText("Export filtered JSON");
     await expect(page.locator(".destructive-actions")).toContainText("Delete all purchase history");
     await expect(page.locator(".export-actions #delete-all-purchases")).toHaveCount(0);
 
@@ -272,6 +274,9 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await expect.poll(() => page.evaluate(() => chrome.action.getBadgeText({}))).toBe("");
 
     const csvDownload = page.waitForEvent("download");
+    if ((await page.locator(".purchase-tools").getAttribute("open")) === null) {
+      await page.locator(".purchase-tools > summary").click();
+    }
     await page.locator("#export-purchase-csv").click();
     const csvPath = await (await csvDownload).path();
     expect(await readFile(csvPath, "utf8")).toContain("purchased");

@@ -41,6 +41,7 @@
           </select>
         </label>
         <button id="refresh-btn" data-i18n="buttonRefresh">更新</button>
+        <p id="sales-status" class="page-feedback" role="status" aria-live="polite"></p>
       </section>
 
       <div class="overview-grid">
@@ -56,6 +57,7 @@
               <strong id="purchase-pending-count">0</strong>
               <span data-i18n="purchasePendingUnit">items</span>
             </p>
+            <p id="purchase-pending-error" role="status" hidden></p>
             <ul id="purchase-pending-list"></ul>
           </div>
           <a
@@ -70,10 +72,29 @@
 
       <section id="sales-chart-section" class="chart-section" hidden>
         <div class="chart-header">
-          <h2 data-i18n="chartTitle">売上推移</h2>
+          <h2 id="chart-title" data-i18n="chartTitle">売上推移</h2>
           <span class="chart-note" data-i18n="chartNote">日次・通貨別</span>
         </div>
-        <canvas id="sales-chart" height="160"></canvas>
+        <canvas
+          id="sales-chart"
+          height="160"
+          role="img"
+          aria-labelledby="chart-title"
+          aria-describedby="chart-data-label"
+        ></canvas>
+        <details>
+          <summary id="chart-data-label" data-i18n="chartData">Daily totals as a table</summary>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="tableHeaderDate">Date</th>
+                <th scope="col" data-i18n="tableHeaderCurrency">Currency</th>
+                <th scope="col" data-i18n="tableHeaderAmount">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="chart-data"></tbody>
+          </table>
+        </details>
       </section>
 
       <section class="table-section">
@@ -121,13 +142,18 @@
       </section>
     </main>
 
-    <div id="modal" class="modal hidden">
+    <dialog
+      id="modal"
+      class="notice-dialog"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-message"
+    >
       <div class="modal-content">
-        <h3 id="modal-title"></h3>
+        <h2 id="modal-title"></h2>
         <p id="modal-message"></p>
         <button id="modal-close" data-i18n="modalClose">閉じる</button>
       </div>
-    </div>
+    </dialog>
 
     <dialog id="detail-modal" class="modal hidden" aria-labelledby="detail-title">
       <div class="modal-content modal-tooltip">
@@ -142,7 +168,7 @@
             <span data-i18n="detailClose">Close</span>
           </button>
           <header class="item-tooltip-header">
-            <h3 id="detail-title"></h3>
+            <h2 id="detail-title"></h2>
             <p id="detail-subtitle"></p>
           </header>
           <div id="detail-body" class="detail-body"></div>

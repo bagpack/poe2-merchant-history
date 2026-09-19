@@ -1,3 +1,4 @@
+import { t } from "../i18n.js";
 import { formatDateTime, formatItemName } from "./formatters.js";
 import type { Language, PopupDom, TradeRecord } from "./types.js";
 
@@ -15,9 +16,7 @@ export class TableRenderer {
     if (!query) {
       return records;
     }
-    return records.filter((record) =>
-      (record.details_json?.typeLine || "").toLowerCase().includes(query)
-    );
+    return records.filter((record) => formatItemName(record).toLowerCase().includes(query));
   }
 
   renderTable(records: TradeRecord[]): void {
@@ -30,6 +29,15 @@ export class TableRenderer {
     const start = (this.pageProvider() - 1) * pageSize;
     const pageRecords = filtered.slice(start, start + pageSize);
 
+    if (filtered.length === 0) {
+      const row = document.createElement("tr");
+      const message = createCell(
+        t(this.languageProvider(), records.length ? "salesNoMatches" : "salesEmpty")
+      );
+      message.colSpan = 4;
+      row.append(message);
+      this.dom.historyBody.append(row);
+    }
     pageRecords.forEach((record) => {
       const row = document.createElement("tr");
       const displayName = formatItemName(record);

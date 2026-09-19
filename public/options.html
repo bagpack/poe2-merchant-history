@@ -28,7 +28,16 @@
         <section class="card">
           <h2 data-i18n="cookieTitle">Cookie状態</h2>
           <p data-i18n="cookieDesc">PoE2の履歴取得に必要なCookieを確認します。</p>
-          <div id="cookie-list"></div>
+          <div id="cookie-list" role="status" aria-live="polite"></div>
+          <p id="cookie-guidance" data-i18n="cookieGuidance"></p>
+          <a
+            class="secondary-button"
+            href="https://www.pathofexile.com/login"
+            target="_blank"
+            rel="noreferrer"
+            data-i18n="cookieLogin"
+            >Sign in on the official site</a
+          >
           <button id="refresh-cookies" data-i18n="cookieButtonRefresh">再取得</button>
         </section>
 

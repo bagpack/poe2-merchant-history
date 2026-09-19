@@ -47,17 +47,24 @@
           ><span data-i18n="purchaseFilterName">Item name</span
           ><input id="purchase-search" type="search"
         /></label>
-        <label
-          ><span data-i18n="purchaseFilterLeague">League</span
-          ><select id="purchase-league-filter"></select
-        ></label>
-        <label
-          ><span data-i18n="purchaseFilterFrom">From</span
-          ><input id="purchase-date-from" type="date"
-        /></label>
-        <label
-          ><span data-i18n="purchaseFilterTo">To</span><input id="purchase-date-to" type="date"
-        /></label>
+        <details id="purchase-advanced-filters" class="advanced-filters">
+          <summary data-i18n="purchaseAdvancedFilters">League and candidate dates</summary>
+          <div class="advanced-fields">
+            <label
+              ><span data-i18n="purchaseFilterLeague">League</span
+              ><select id="purchase-league-filter"></select
+            ></label>
+            <label
+              ><span data-i18n="purchaseFilterFrom">From</span
+              ><input id="purchase-date-from" type="date" aria-describedby="purchase-date-error"
+            /></label>
+            <label
+              ><span data-i18n="purchaseFilterTo">To</span
+              ><input id="purchase-date-to" type="date" aria-describedby="purchase-date-error"
+            /></label>
+          </div>
+          <p id="purchase-date-error" class="field-error" role="alert" hidden></p>
+        </details>
         <button
           id="clear-purchase-filters"
           class="secondary-action filter-reset"
@@ -68,28 +75,41 @@
         </button>
       </section>
 
-      <section class="toolbar">
-        <div class="toolbar-actions">
-          <div class="export-actions">
-            <button id="export-purchase-csv" class="secondary-action" data-i18n="buttonCsv">
-              Export CSV
-            </button>
-            <button
-              id="export-purchase-json"
-              class="secondary-action"
-              data-i18n="purchaseExportJson"
-            >
-              Export JSON
-            </button>
+      <details class="purchase-tools">
+        <summary data-i18n="purchaseTools">Export and delete</summary>
+        <section class="toolbar">
+          <div class="toolbar-actions">
+            <div class="export-actions">
+              <button
+                id="export-purchase-csv"
+                class="secondary-action"
+                data-i18n="purchaseExportCsv"
+              >
+                Export CSV
+              </button>
+              <button
+                id="export-purchase-json"
+                class="secondary-action"
+                data-i18n="purchaseExportJson"
+              >
+                Export JSON
+              </button>
+            </div>
+            <div class="destructive-actions">
+              <button id="delete-all-purchases" class="danger" data-i18n="purchaseDeleteAll">
+                Delete all purchase history
+              </button>
+            </div>
           </div>
-          <div class="destructive-actions">
-            <button id="delete-all-purchases" class="danger" data-i18n="purchaseDeleteAll">
-              Delete all purchase history
-            </button>
-          </div>
-        </div>
-      </section>
-
+        </section>
+      </details>
+      <div class="purchase-results-heading">
+        <p id="purchase-result-count" role="status" aria-live="polite"></p>
+        <details class="purchase-help">
+          <summary data-i18n="purchaseHelpTitle">How to use purchase history</summary>
+          <p data-i18n="purchaseHelpBody"></p>
+        </details>
+      </div>
       <p
         id="purchase-status"
         class="page-status"
@@ -130,6 +150,7 @@
           Undo
         </button>
       </section>
+
       <p id="purchase-empty" class="empty" data-i18n="purchaseEmpty">No purchase history.</p>
       <div id="purchase-list-wrapper" class="purchase-list-wrapper">
         <div class="purchase-list" role="table" aria-labelledby="purchase-history-title">
@@ -164,7 +185,7 @@
             <span data-i18n="detailClose">Close</span>
           </button>
           <header class="item-tooltip-header">
-            <h3 id="detail-title"></h3>
+            <h2 id="detail-title"></h2>
             <p id="detail-subtitle"></p>
           </header>
           <div id="detail-body" class="detail-body"></div>

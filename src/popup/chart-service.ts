@@ -48,6 +48,22 @@ export class ChartService {
 
     const labels = Array.from(daily.keys()).sort();
     const orderedCurrencies = buildCurrencyOrder(records);
+    const dataBody = document.getElementById("chart-data");
+    if (dataBody) {
+      dataBody.replaceChildren(
+        ...labels.flatMap((date) =>
+          Array.from(daily.get(date)!, ([currency, amount]) => {
+            const row = document.createElement("tr");
+            for (const value of [date, currency, String(amount)]) {
+              const cell = document.createElement("td");
+              cell.textContent = value;
+              row.append(cell);
+            }
+            return row;
+          })
+        )
+      );
+    }
 
     const theme = getComputedStyle(this.canvas);
     const textColor = theme.getPropertyValue("--muted").trim();
