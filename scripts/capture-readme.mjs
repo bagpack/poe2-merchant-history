@@ -39,6 +39,8 @@ try {
       "Ruby Ring",
       "Iron Ring",
     ];
+    const saleCurrencies = ["divine", "exalted", "chaos", "annul", "exalted", "divine"];
+    const saleAmounts = [12_345, 98_765, 4_321, 10_250, 32, 12];
     const items = names.map((typeLine, i) => ({
       id: `readme-sample-${i}`,
       name: i === 0 ? "Dusk Circle" : "",
@@ -73,8 +75,8 @@ try {
             tx.objectStore("trade_history").put({
               id: `sale-${i}`,
               item_name: item.typeLine,
-              currency: i % 3 === 0 ? "divine" : "exalted",
-              amount: [2, 45, 18, 1, 32, 12][i],
+              currency: saleCurrencies[i],
+              amount: saleAmounts[i],
               time: new Date(Date.UTC(2026, 8, 12 - i, 9, 15)).toISOString(),
               details_json: item,
             })

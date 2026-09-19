@@ -17,9 +17,31 @@ const currencyOrder = [
   "wisdom",
 ];
 
+const currencyIcons: Record<string, string> = {
+  divine: "CurrencyModValues.png",
+  exalted: "CurrencyAddModToRare.png",
+  chaos: "CurrencyRerollRare.png",
+  annul: "AnnullOrb.png",
+  regal: "CurrencyUpgradeMagicToRare.png",
+  alchemy: "CurrencyUpgradeToRare.png",
+  chance: "CurrencyUpgradeToUnique.png",
+  transmute: "CurrencyUpgradeToMagic.png",
+  augmentation: "CurrencyAddModToMagic.png",
+  wisdom: "CurrencyIdentification.png",
+};
+
+export function getCurrencyIcon(currency: string): string | null {
+  const filename = currencyIcons[currency];
+  return filename ? `assets/currency/${filename}` : null;
+}
+
 export function formatDateTime(isoString: string, language: Language): string {
   const date = new Date(isoString);
   return date.toLocaleString(getLocaleForLanguage(language));
+}
+
+export function formatAmount(amount: number, language: Language): string {
+  return amount.toLocaleString(getLocaleForLanguage(language));
 }
 
 export function formatDateKey(isoString: string): string {

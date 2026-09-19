@@ -10,7 +10,7 @@ import { isPurchaseHistoryChangedMessage } from "../purchase/messages.js";
 import { ChartService } from "./chart-service.js";
 import { DetailRenderer } from "./detail-renderer.js";
 import { getPopupDom } from "./dom.js";
-import { buildCsv, buildCsvFilename, buildCurrencyOrder, downloadCsv } from "./formatters.js";
+import { buildCsv, buildCsvFilename, downloadCsv, formatDateKey } from "./formatters.js";
 import { HistoryService } from "./history-service.js";
 import { PopupState } from "./state.js";
 import { TableRenderer } from "./table-renderer.js";
@@ -32,7 +32,12 @@ export class PopupApp {
     () => this.state.getCurrentPage(),
     (page) => this.state.setCurrentPage(page)
   );
-  private readonly chartService = new ChartService(this.dom.chartCanvas);
+  private readonly chartService = new ChartService(
+    this.dom.salesRail,
+    this.dom.chartDataBody,
+    this.dom.daySummary
+  );
+  private selectedDate: string | null = null;
 
   async init(): Promise<void> {
     this.bindEvents();
@@ -86,6 +91,7 @@ export class PopupApp {
     });
     this.dom.leagueSelect.addEventListener("change", async () => {
       this.historyService.storeSelectedLeague(this.dom.leagueSelect.value);
+      this.selectedDate = null;
       this.state.setCurrentPage(1);
       await migrateLegacyDbIfNeeded(this.dom.leagueSelect.value);
       await this.refreshData(this.dom.leagueSelect.value);
@@ -119,25 +125,34 @@ export class PopupApp {
 
     this.dom.csvExportButton.addEventListener("click", () => this.handleCsvExport());
 
+    this.dom.salesRail.addEventListener("click", (event) => {
+      const frame =
+        event.target instanceof Element
+          ? event.target.closest<HTMLButtonElement>("[data-date]")
+          : null;
+      if (frame?.dataset.date) this.selectDate(frame.dataset.date);
+    });
+    this.dom.showAllDatesButton.addEventListener("click", () => this.selectDate(null));
+
     this.dom.searchInput.addEventListener("input", () => {
       this.state.setCurrentPage(1);
-      this.tableRenderer.renderTable(this.state.getRecords());
+      this.tableRenderer.renderTable(this.getVisibleRecords());
     });
 
     this.dom.pageSizeSelect.addEventListener("change", () => {
       this.historyService.storePageSize(this.dom.pageSizeSelect.value);
       this.state.setCurrentPage(1);
-      this.tableRenderer.renderTable(this.state.getRecords());
+      this.tableRenderer.renderTable(this.getVisibleRecords());
     });
 
     this.dom.prevPageButton.addEventListener("click", () => {
       this.state.setCurrentPage(this.state.getCurrentPage() - 1);
-      this.tableRenderer.renderTable(this.state.getRecords());
+      this.tableRenderer.renderTable(this.getVisibleRecords());
     });
 
     this.dom.nextPageButton.addEventListener("click", () => {
       this.state.setCurrentPage(this.state.getCurrentPage() + 1);
-      this.tableRenderer.renderTable(this.state.getRecords());
+      this.tableRenderer.renderTable(this.getVisibleRecords());
     });
   }
 
@@ -164,7 +179,15 @@ export class PopupApp {
       ...pending.slice(0, 5).map((record) => {
         const item = document.createElement("li");
         const price = record.listingSnapshot.price;
-        item.textContent = `${record.summary.displayName}${price ? ` · ${price.amount} ${price.currency}` : ""}`;
+        if (record.summary.iconUrl) {
+          const image = document.createElement("img");
+          image.src = record.summary.iconUrl;
+          image.alt = "";
+          item.append(image);
+        }
+        const label = document.createElement("span");
+        label.textContent = `${record.summary.displayName}${price ? ` · ${price.amount} ${price.currency}` : ""}`;
+        item.append(label);
         return item;
       })
     );
@@ -186,6 +209,7 @@ export class PopupApp {
     this.state.setCurrentLanguage(normalized);
     document.documentElement.lang = normalized;
     applyTranslations(document, normalized);
+    if (this.state.getRecords().length) this.renderSalesView();
   }
 
   private showModal(title: string, message: string): void {
@@ -205,49 +229,37 @@ export class PopupApp {
     this.dom.modal.close();
   }
 
-  private renderTotals(records: TradeRecord[]): void {
-    this.dom.totalsContainer.innerHTML = "";
-    if (records.length === 0) {
-      this.dom.totalsContainer.textContent = t(this.state.getCurrentLanguage(), "totalsEmpty");
-      return;
-    }
-
-    const totals = new Map<string, number>();
-    records.forEach((record) => {
-      if (!record.currency) {
-        return;
-      }
-      const current = totals.get(record.currency) || 0;
-      totals.set(record.currency, current + Number(record.amount || 0));
-    });
-
-    const ordered = buildCurrencyOrder(records);
-    ordered.forEach((currency) => {
-      if (!totals.has(currency)) {
-        return;
-      }
-      const pill = document.createElement("div");
-      pill.className = "total-pill";
-      const name = document.createElement("span");
-      name.textContent = currency;
-      const amount = document.createElement("strong");
-      amount.textContent = String(totals.get(currency));
-      pill.append(name, amount);
-      this.dom.totalsContainer.appendChild(pill);
-    });
-  }
-
   private async refreshData(leagueId: string): Promise<void> {
     const records = await this.historyService.loadRecords(leagueId);
     this.state.setRecords(records);
-    this.renderTotals(records);
 
     this.dom.chartSection.hidden = records.length === 0;
-    if (records.length > 0) {
-      const nextChart = this.chartService.render(records, this.state.getChart());
-      this.state.setChart(nextChart);
-    }
-    this.tableRenderer.renderTable(records);
+    this.renderSalesView();
+  }
+
+  private selectDate(date: string | null): void {
+    this.selectedDate = date;
+    this.state.setCurrentPage(1);
+    this.renderSalesView();
+  }
+
+  private getVisibleRecords(): TradeRecord[] {
+    return this.selectedDate
+      ? this.state.getRecords().filter((record) => formatDateKey(record.time) === this.selectedDate)
+      : this.state.getRecords();
+  }
+
+  private renderSalesView(): void {
+    const records = this.state.getRecords();
+    const language = this.state.getCurrentLanguage();
+    this.chartService.render(records, this.selectedDate, language);
+    this.tableRenderer.renderTable(this.getVisibleRecords());
+    this.dom.showAllDatesButton.setAttribute("aria-pressed", String(this.selectedDate === null));
+    this.dom.selectedDateLabel.textContent = t(
+      language,
+      this.selectedDate ? "salesSelectedDate" : "salesAllDatesSelected",
+      this.selectedDate ? { date: this.selectedDate } : undefined
+    );
   }
 
   private resolveErrorMessage(
@@ -316,7 +328,7 @@ export class PopupApp {
       );
       return;
     }
-    const records = this.state.getRecords();
+    const records = this.getVisibleRecords();
     if (!records.length) {
       this.showModal(
         t(this.state.getCurrentLanguage(), "modalErrorTitle"),

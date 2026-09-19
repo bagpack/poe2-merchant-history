@@ -24,6 +24,24 @@ const HISTORY_API_FIXTURE = {
       },
       time: "2026-01-01T00:00:00.000Z",
     },
+    {
+      item_id: "item-2",
+      item: { league: "Runes of Aldur", name: "", typeLine: "Exalted Item" },
+      price: { currency: "exalted", amount: 98_765 },
+      time: "2026-01-01T01:00:00.000Z",
+    },
+    {
+      item_id: "item-3",
+      item: { league: "Runes of Aldur", name: "", typeLine: "Chaos Item" },
+      price: { currency: "chaos", amount: 4_321 },
+      time: "2026-01-01T02:00:00.000Z",
+    },
+    {
+      item_id: "item-4",
+      item: { league: "Runes of Aldur", name: "", typeLine: "Annul Item" },
+      price: { currency: "annul", amount: 10_250 },
+      time: "2026-01-01T03:00:00.000Z",
+    },
   ],
 };
 
@@ -35,6 +53,17 @@ test("options backup export includes storage and IndexedDB data", async () => {
   const extension = await launchExtensionContext();
 
   try {
+    await extension.context.addCookies([
+      {
+        name: "POESESSID",
+        value: "test-session",
+        domain: ".pathofexile.com",
+        path: "/",
+        secure: true,
+        httpOnly: true,
+        sameSite: "Lax",
+      },
+    ]);
     const setupPage = await extension.context.newPage();
     await setupPage.goto(`chrome-extension://${extension.extensionId}/options.html`);
 
@@ -103,6 +132,10 @@ test("options backup export includes storage and IndexedDB data", async () => {
     await page.goto(`chrome-extension://${extension.extensionId}/options.html`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("設定");
     await expect(page.getByRole("heading", { level: 2, name: "ログイン状態" })).toBeVisible();
+    await expect(page.locator(".cookie-row")).toContainText("公式サイトのログイン情報");
+    await expect(page.locator(".cookie-row")).not.toContainText("POESESSID");
+    await expect(page.locator(".status-ok")).toHaveText("取得済み");
+    await expect(page.locator(".status-ok")).not.toContainText("期限");
     await expect(page.getByRole("button", { name: "バックアップ出力" })).toBeVisible();
     await expect(page.getByRole("button", { name: "バックアップから復元" })).toBeVisible();
     await expect(page.locator("#backup-restore-warning")).toContainText(
@@ -187,7 +220,6 @@ test("popup loads leagues and supports language switch", async () => {
 
     await page.selectOption("#language-select", "ja");
     await expect(page.locator("[data-i18n='labelLeague']")).toHaveText("リーグ");
-    await expect(page.locator("[data-i18n='appSubtitle']")).toHaveText("リーグ別の販売履歴を確認");
     await expect(page.locator("#sales-history-title")).toHaveText("販売履歴");
     await expect(page.getByLabel("アイテム名を検索")).toBeVisible();
     await expect(page.getByLabel("1ページの表示件数")).toBeVisible();
@@ -195,6 +227,27 @@ test("popup loads leagues and supports language switch", async () => {
       "font-variant-numeric",
       "tabular-nums"
     );
+
+    const clippedCsvWidths = [];
+    for (const width of [801, 900, 1024, 1180, 1181, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 720 });
+      const csvButtonFits = await page.locator("#csv-export").evaluate((button) => {
+        const buttonBox = button.getBoundingClientRect();
+        const controlsBox = button.parentElement.getBoundingClientRect();
+        const label = document.createRange();
+        label.selectNodeContents(button);
+        const labelBox = label.getBoundingClientRect();
+        return (
+          buttonBox.left >= controlsBox.left &&
+          buttonBox.right <= controlsBox.right &&
+          labelBox.left >= buttonBox.left &&
+          labelBox.right <= buttonBox.right &&
+          button.scrollWidth <= button.clientWidth
+        );
+      });
+      if (!csvButtonFits) clippedCsvWidths.push(width);
+    }
+    expect(clippedCsvWidths).toEqual([]);
 
     for (const width of [320, 375, 414, 768]) {
       await page.setViewportSize({ width, height: 720 });
@@ -246,6 +299,35 @@ test("sales item details use an accessible item-name trigger and dialog", async 
     await page.getByRole("button", { name: "Refresh" }).click();
     await expect(page.locator("#sales-status")).toContainText("Total");
     await expect(page.locator(".chart-section")).toBeVisible();
+    await expect(page.locator(".day-summary img")).toHaveCount(4);
+    expect(
+      await page
+        .locator(".day-summary img")
+        .first()
+        .evaluate((image) => image.naturalWidth)
+    ).toBeGreaterThan(0);
+    await expect(page.locator(".day-summary dd")).toContainText([
+      "4",
+      "1",
+      "98,765",
+      "4,321",
+      "10,250",
+    ]);
+    await expect(page.locator("#history-body .currency-value img")).toHaveCount(4);
+    await expect(page.locator("#history-body")).toContainText("98,765");
+    const dayFrame = page.locator(".film-frame");
+    await expect(dayFrame).toHaveCount(1);
+    await expect(dayFrame.locator(".film-sale-count")).toHaveText("4 sales");
+    await expect(dayFrame.locator("img")).toHaveCount(0);
+    await expect(dayFrame.locator(".film-gauge")).toHaveCount(0);
+    expect(
+      await dayFrame.evaluate((frame) => frame.getBoundingClientRect().height)
+    ).toBeLessThanOrEqual(90);
+    await dayFrame.click();
+    await expect(dayFrame).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#selected-date-label")).toContainText("Showing");
+    await page.locator("#show-all-dates").click();
+    await expect(dayFrame).toHaveAttribute("aria-pressed", "false");
 
     const detailTrigger = page.getByRole("button", { name: "Test Item" });
     await detailTrigger.focus();

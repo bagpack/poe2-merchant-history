@@ -1,16 +1,13 @@
 import {
   applyTranslations,
   getHostForLanguage,
-  getLocaleForLanguage,
   loadUiLanguage,
   normalizeLanguage,
   t,
 } from "./i18n.js";
 
 type CookieViewModel = {
-  name: string;
   value: string | null;
-  expirationDate: number | null;
 };
 
 type BackupStoreDef = {
@@ -318,14 +315,12 @@ class CookieStatusPresenter {
       row.className = "cookie-row";
 
       const name = document.createElement("div");
-      name.textContent = cookie.name;
+      name.textContent = t(this.getLanguage(), "cookieLoginInformation");
 
       const status = document.createElement("div");
       if (cookie.value) {
         status.className = "status-ok";
-        status.textContent = t(this.getLanguage(), "cookieStatusOk", {
-          date: this.formatExpiration(cookie),
-        });
+        status.textContent = t(this.getLanguage(), "cookieStatusOk");
       } else {
         status.className = "status-missing";
         status.textContent = t(this.getLanguage(), "cookieStatusMissing");
@@ -335,14 +330,6 @@ class CookieStatusPresenter {
       row.appendChild(status);
       this.container.appendChild(row);
     });
-  }
-
-  private formatExpiration(cookie: CookieViewModel): string {
-    if (!cookie.expirationDate) {
-      return "-";
-    }
-    const date = new Date(cookie.expirationDate * 1000);
-    return date.toLocaleString(getLocaleForLanguage(this.getLanguage()));
   }
 }
 
@@ -489,10 +476,8 @@ class OptionsPageController {
     const results = await Promise.all(
       this.cookieNames.map((name) => this.cookieService.getCookie(name))
     );
-    const viewModels: CookieViewModel[] = this.cookieNames.map((name, index) => ({
-      name,
+    const viewModels: CookieViewModel[] = this.cookieNames.map((_, index) => ({
       value: results[index]?.value || null,
-      expirationDate: results[index]?.expirationDate || null,
     }));
     this.presenter.render(viewModels);
   }

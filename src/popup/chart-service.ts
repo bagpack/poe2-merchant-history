@@ -1,128 +1,143 @@
-import { buildCurrencyOrder, formatDateKey } from "./formatters.js";
-import type { ChartCtor, ChartDataset, ChartLike, TradeRecord } from "./types.js";
+import { t } from "../i18n.js";
+import { buildCurrencyOrder, formatAmount, formatDateKey, getCurrencyIcon } from "./formatters.js";
+import type { Language, TradeRecord } from "./types.js";
 
-const currencies = [
-  "divine",
-  "exalted",
-  "chaos",
-  "annul",
-  "regal",
-  "alchemy",
-  "chance",
-  "scour",
-  "transmute",
-  "alteration",
-  "augmentation",
-  "wisdom",
-];
+export interface DailySales {
+  date: string;
+  saleCount: number;
+  totals: Map<string, number>;
+}
 
-declare global {
-  interface Window {
-    Chart?: ChartCtor;
+export function buildDailySales(records: TradeRecord[]): DailySales[] {
+  const daily = new Map<string, DailySales>();
+  for (const record of records) {
+    const date = formatDateKey(record.time);
+    const summary = daily.get(date) ?? {
+      date,
+      saleCount: 0,
+      totals: new Map<string, number>(),
+    };
+    summary.saleCount += 1;
+    if (record.currency) {
+      summary.totals.set(
+        record.currency,
+        (summary.totals.get(record.currency) ?? 0) + Number(record.amount ?? 0)
+      );
+    }
+    daily.set(date, summary);
   }
+  return [...daily.values()].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export class ChartService {
-  constructor(private readonly canvas: HTMLCanvasElement) {}
+  constructor(
+    private readonly rail: HTMLElement,
+    private readonly dataBody: HTMLTableSectionElement,
+    private readonly daySummary: HTMLElement
+  ) {}
 
-  render(records: TradeRecord[], chartInstance: ChartLike | null): ChartLike | null {
-    const chartConstructor = window.Chart;
-    if (!chartConstructor) {
-      return chartInstance;
+  render(records: TradeRecord[], selectedDate: string | null, language: Language): void {
+    const daily = buildDailySales(records);
+    this.rail.replaceChildren(
+      ...daily.map((day) => this.createFrame(day, day.date === selectedDate, language))
+    );
+    this.renderDataTable(daily);
+    this.renderSummary(records, daily, selectedDate, language);
+  }
+
+  private createFrame(day: DailySales, selected: boolean, language: Language): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "film-frame";
+    button.dataset.date = day.date;
+    button.setAttribute("aria-pressed", String(selected));
+    const currencyText = [...day.totals].map(([name, amount]) => `${amount} ${name}`).join(", ");
+    button.setAttribute(
+      "aria-label",
+      `${day.date}, ${t(language, "salesCount", { count: day.saleCount })}${currencyText ? `, ${currencyText}` : ""}`
+    );
+
+    const date = document.createElement("span");
+    date.className = "film-date";
+    date.textContent = day.date;
+    const count = document.createElement("span");
+    count.className = "film-sale-count";
+    count.textContent = t(language, "salesCount", { count: day.saleCount });
+    button.append(date, count);
+    return button;
+  }
+
+  private renderDataTable(daily: DailySales[]): void {
+    this.dataBody.replaceChildren(
+      ...daily.flatMap((day) =>
+        [...day.totals].map(([currency, amount]) => {
+          const row = document.createElement("tr");
+          for (const value of [day.date, currency, String(amount)]) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.append(cell);
+          }
+          return row;
+        })
+      )
+    );
+  }
+
+  private renderSummary(
+    records: TradeRecord[],
+    daily: DailySales[],
+    selectedDate: string | null,
+    language: Language
+  ): void {
+    const visibleRecords = selectedDate
+      ? records.filter((record) => formatDateKey(record.time) === selectedDate)
+      : records;
+    const totals = new Map<string, number>();
+    for (const record of visibleRecords) {
+      if (record.currency) {
+        totals.set(
+          record.currency,
+          (totals.get(record.currency) ?? 0) + Number(record.amount ?? 0)
+        );
+      }
     }
 
-    const daily = new Map<string, Map<string, number>>();
-    records.forEach((record) => {
-      const dateKey = formatDateKey(record.time);
-      if (!daily.has(dateKey)) {
-        daily.set(dateKey, new Map<string, number>());
-      }
-      const map = daily.get(dateKey);
-      if (!map) {
-        return;
-      }
-      const currency = record.currency || "";
-      const current = map.get(currency) || 0;
-      map.set(currency, current + Number(record.amount || 0));
-    });
-
-    const labels = Array.from(daily.keys()).sort();
-    const orderedCurrencies = buildCurrencyOrder(records);
-    const dataBody = document.getElementById("chart-data");
-    if (dataBody) {
-      dataBody.replaceChildren(
-        ...labels.flatMap((date) =>
-          Array.from(daily.get(date)!, ([currency, amount]) => {
-            const row = document.createElement("tr");
-            for (const value of [date, currency, String(amount)]) {
-              const cell = document.createElement("td");
-              cell.textContent = value;
-              row.append(cell);
-            }
-            return row;
-          })
-        )
-      );
-    }
-
-    const theme = getComputedStyle(this.canvas);
-    const textColor = theme.getPropertyValue("--muted").trim();
-    const gridColor = theme.getPropertyValue("--chart-grid").trim();
-    let fallbackIndex = 0;
-    const datasets = orderedCurrencies
-      .map((currency) => {
-        const data = labels.map((label) => daily.get(label)?.get(currency) || 0);
-        if (data.every((value) => value === 0)) {
-          return null;
+    const heading = document.createElement("h2");
+    heading.textContent = t(language, selectedDate ? "salesDaySummary" : "salesPeriodSummary");
+    const list = document.createElement("dl");
+    const countGroup = document.createElement("div");
+    countGroup.className = "summary-count";
+    const countTerm = document.createElement("dt");
+    countTerm.textContent = t(language, "salesTransactions");
+    const countValue = document.createElement("dd");
+    countValue.textContent = String(visibleRecords.length);
+    countGroup.append(countTerm, countValue);
+    list.append(
+      countGroup,
+      ...buildCurrencyOrder(visibleRecords).flatMap((currency) => {
+        const amount = totals.get(currency);
+        if (amount === undefined) return [];
+        const group = document.createElement("div");
+        group.className = "summary-currency";
+        const iconUrl = getCurrencyIcon(currency);
+        if (iconUrl) {
+          const icon = document.createElement("img");
+          icon.src = iconUrl;
+          icon.alt = "";
+          group.append(icon);
         }
-        const knownIndex = currencies.indexOf(currency);
-        const colorIndex = knownIndex >= 0 ? knownIndex : fallbackIndex++ % currencies.length;
-        const color = theme.getPropertyValue(`--chart-${colorIndex}`).trim();
-        const dataset: ChartDataset = {
-          label: currency,
-          data,
-          borderColor: color,
-          backgroundColor: "rgba(0,0,0,0)",
-          tension: 0.2,
-        };
-        return dataset;
+        const term = document.createElement("dt");
+        term.textContent = currency;
+        const value = document.createElement("dd");
+        value.textContent = formatAmount(amount, language);
+        group.append(term, value);
+        return [group];
       })
-      .filter((dataset): dataset is ChartDataset => dataset !== null);
-
-    if (chartInstance) {
-      chartInstance.data.labels = labels;
-      chartInstance.data.datasets = datasets;
-      chartInstance.update();
-      return chartInstance;
-    }
-
-    return new chartConstructor(this.canvas, {
-      type: "line",
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: "bottom",
-            labels: { color: textColor },
-          },
-        },
-        scales: {
-          x: {
-            grid: { color: gridColor },
-            ticks: {
-              maxTicksLimit: 6,
-              color: textColor,
-            },
-          },
-          y: {
-            beginAtZero: true,
-            ticks: { color: textColor },
-            grid: { color: gridColor },
-          },
-        },
-      },
-    });
+    );
+    const note = document.createElement("p");
+    note.className = "day-summary-note";
+    note.textContent = t(language, "salesCurrencyNote");
+    this.daySummary.replaceChildren(heading, list, note);
+    this.daySummary.hidden = daily.length === 0;
   }
 }

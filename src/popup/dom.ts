@@ -16,7 +16,6 @@ export function getPopupDom(): PopupDom {
     leagueSelect: requireElement("league-select", HTMLSelectElement),
     refreshButton: requireElement("refresh-btn", HTMLButtonElement),
     languageSelect: requireElement("language-select", HTMLSelectElement),
-    totalsContainer: requireElement("totals", HTMLElement),
     historyBody: requireElement("history-body", HTMLTableSectionElement),
     searchInput: requireElement("search-input", HTMLInputElement),
     pageSizeSelect: requireElement("page-size", HTMLSelectElement),
@@ -34,7 +33,11 @@ export function getPopupDom(): PopupDom {
     detailSubtitle: requireElement("detail-subtitle", HTMLElement),
     detailBody: requireElement("detail-body", HTMLElement),
     detailCard: requireElement("detail-card", HTMLElement),
-    chartCanvas: requireElement("sales-chart", HTMLCanvasElement),
+    salesRail: requireElement("sales-chart", HTMLElement),
+    chartDataBody: requireElement("chart-data", HTMLTableSectionElement),
+    daySummary: requireElement("day-summary", HTMLElement),
+    showAllDatesButton: requireElement("show-all-dates", HTMLButtonElement),
+    selectedDateLabel: requireElement("selected-date-label", HTMLElement),
     chartSection: requireElement("sales-chart-section", HTMLElement),
   };
 }

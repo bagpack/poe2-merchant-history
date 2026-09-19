@@ -1,5 +1,5 @@
 import { t } from "../i18n.js";
-import { formatDateTime, formatItemName } from "./formatters.js";
+import { formatAmount, formatDateTime, formatItemName, getCurrencyIcon } from "./formatters.js";
 import type { Language, PopupDom, TradeRecord } from "./types.js";
 
 export class TableRenderer {
@@ -52,8 +52,8 @@ export class TableRenderer {
       row.append(
         createCell(formatDateTime(record.time, this.languageProvider())),
         itemCell,
-        createCell(record.currency),
-        createCell(record.amount)
+        createCurrencyCell(record.currency),
+        createCell(formatAmount(Number(record.amount ?? 0), this.languageProvider()))
       );
       this.dom.historyBody.appendChild(row);
     });
@@ -62,6 +62,22 @@ export class TableRenderer {
     this.dom.prevPageButton.disabled = this.pageProvider() <= 1;
     this.dom.nextPageButton.disabled = this.pageProvider() >= totalPages;
   }
+}
+
+function createCurrencyCell(currency: string | null | undefined): HTMLTableCellElement {
+  const cell = document.createElement("td");
+  const value = document.createElement("span");
+  value.className = "currency-value";
+  const iconUrl = currency ? getCurrencyIcon(currency) : null;
+  if (iconUrl) {
+    const icon = document.createElement("img");
+    icon.src = iconUrl;
+    icon.alt = "";
+    value.append(icon);
+  }
+  value.append(currency ?? "");
+  cell.append(value);
+  return cell;
 }
 
 function createCell(value: unknown): HTMLTableCellElement {

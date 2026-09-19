@@ -319,3 +319,171 @@ input[aria-invalid="true"] {
   color: var(--on-accent);
   background: var(--accent);
 }
+
+/* Shared film-workbench shell used by all three extension surfaces. */
+/* stylelint-disable no-descending-specificity */
+.film-app {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.film-nav {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  min-height: 100vh;
+  padding: 24px 28px;
+  border-right: 1px solid var(--border);
+  background:
+    url("assets/textures/film-grain.png") center / cover,
+    var(--masthead);
+}
+
+.film-nav .brand {
+  display: grid;
+  gap: 2px;
+  margin: 0 8px 28px;
+  color: var(--masthead-text);
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.film-nav .brand span {
+  color: var(--masthead-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.film-nav nav {
+  display: grid;
+  gap: 8px;
+}
+
+.film-nav nav a {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  color: var(--masthead-muted);
+  background: var(--card);
+  text-decoration: none;
+}
+
+.film-nav nav a:hover {
+  border-color: var(--accent);
+  color: var(--masthead-text);
+}
+
+.film-nav nav a[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--on-accent);
+  background: var(--accent);
+  font-weight: 700;
+}
+
+.film-nav nav a[aria-current="page"]:hover {
+  color: var(--on-accent);
+  background: var(--accent-hover);
+}
+
+.case-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  min-height: 176px;
+  gap: 32px;
+  padding: 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.case-header h1 {
+  font-size: 42px;
+  letter-spacing: -0.035em;
+}
+
+.case-header p {
+  max-width: 72ch;
+  margin-top: 10px;
+}
+
+@media (width <= 900px) {
+  .film-app {
+    display: block;
+  }
+
+  .film-nav {
+    position: static;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    min-height: 0;
+    padding: 16px 24px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    background:
+      linear-gradient(rgb(8 10 14 / 88%), rgb(8 10 14 / 88%)),
+      url("assets/textures/film-grain.png") center / cover,
+      var(--masthead);
+  }
+
+  .film-nav .brand {
+    margin: 0;
+  }
+
+  .film-nav nav {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .film-nav nav a {
+    min-height: 44px;
+  }
+
+  .case-header {
+    min-height: 0;
+    padding: 28px 24px;
+  }
+}
+
+@media (width <= 600px) {
+  .film-nav {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .film-nav nav {
+    justify-content: stretch;
+    gap: 6px;
+  }
+
+  .film-nav nav a {
+    flex: 1;
+    justify-content: center;
+    padding-inline: 8px;
+    font-size: 12px;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .case-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 16px;
+  }
+
+  .case-header h1 {
+    font-size: 32px;
+  }
+}
+/* stylelint-enable no-descending-specificity */

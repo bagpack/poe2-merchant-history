@@ -7,68 +7,83 @@
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <div class="site-masthead">
-      <div class="masthead-inner">
+    <div class="film-app">
+      <aside class="film-nav">
         <a class="brand" href="popup.html">PoE2 <span>Merchant History</span></a>
         <nav aria-label="Main navigation" data-i18n-aria-label="mainNavigation">
           <a href="popup.html" data-i18n="tableTitle">Sales history</a>
           <a href="purchase-history.html" data-i18n="purchaseHistoryTitle">Purchase History</a>
           <a href="options.html" data-i18n="settingsTitle" aria-current="page">Settings</a>
         </nav>
-      </div>
-    </div>
+      </aside>
 
-    <main class="workspace options">
-      <header class="page-heading">
-        <h1 data-i18n="settingsTitle">設定</h1>
-        <p data-i18n="settingsDesc">接続状態とバックアップを管理します。</p>
-      </header>
-
-      <div class="settings-grid">
-        <section class="card">
-          <h2 data-i18n="cookieTitle">Cookie状態</h2>
-          <p data-i18n="cookieDesc">PoE2の履歴取得に必要なCookieを確認します。</p>
-          <div id="cookie-list" role="status" aria-live="polite"></div>
-          <p id="cookie-guidance" data-i18n="cookieGuidance"></p>
-          <a
-            class="secondary-button"
-            href="https://www.pathofexile.com/login"
-            target="_blank"
-            rel="noreferrer"
-            data-i18n="cookieLogin"
-            >Sign in on the official site</a
-          >
-          <button id="refresh-cookies" data-i18n="cookieButtonRefresh">再取得</button>
-        </section>
-
-        <section class="card">
-          <h2 data-i18n="backupTitle">バックアップ / 復元</h2>
-          <p data-i18n="backupDesc">
-            拡張ID変更時に備えて、設定・販売履歴・購入履歴をエクスポート/インポートします。
-          </p>
-          <div class="backup-actions">
-            <div class="export-zone">
-              <button id="export-backup" class="secondary-action" data-i18n="backupExport">
-                バックアップ出力
-              </button>
-            </div>
-            <div class="restore-zone">
-              <p
-                id="backup-restore-warning"
-                class="backup-warning"
-                data-i18n="backupRestoreWarning"
-              >
-                復元すると現在の設定・販売履歴・購入履歴を置き換えます。
-              </p>
-              <button id="import-backup" class="danger" data-i18n="backupImport">
-                バックアップから復元
-              </button>
-            </div>
+      <main class="options-workspace">
+        <header class="case-header options-header">
+          <div>
+            <h1 data-i18n="settingsTitle">設定</h1>
+            <p data-i18n="settingsDesc">接続状態とバックアップを管理します。</p>
           </div>
-          <p id="backup-status" class="backup-status" role="status" aria-live="polite"></p>
-        </section>
-      </div>
-    </main>
+        </header>
+
+        <div class="settings-grid">
+          <section class="card connection-manifest" aria-labelledby="connection-title">
+            <div class="section-heading">
+              <h2 id="connection-title" data-i18n="cookieTitle">Cookie状態</h2>
+              <p data-i18n="cookieDesc">PoE2の履歴取得に必要なCookieを確認します。</p>
+            </div>
+            <div class="connection-record">
+              <div id="cookie-list" role="status" aria-live="polite"></div>
+              <p id="cookie-guidance" data-i18n="cookieGuidance"></p>
+            </div>
+            <div class="connection-actions">
+              <a
+                class="secondary-button"
+                href="https://www.pathofexile.com/login"
+                target="_blank"
+                rel="noreferrer"
+                data-i18n="cookieLogin"
+                >Sign in on the official site</a
+              >
+              <button id="refresh-cookies" data-i18n="cookieButtonRefresh">再取得</button>
+            </div>
+          </section>
+
+          <section class="card backup-vault" aria-labelledby="backup-title">
+            <div class="section-heading">
+              <h2 id="backup-title" data-i18n="backupTitle">バックアップ / 復元</h2>
+              <p data-i18n="backupDesc">
+                設定・販売履歴・購入履歴をエクスポート/インポートします。
+              </p>
+            </div>
+            <div class="backup-actions">
+              <div class="export-zone">
+                <h3 data-i18n="backupExportTitle">バックアップを作成</h3>
+                <p data-i18n="backupExportDesc">
+                  設定・販売履歴・購入履歴を1つのファイルに保存します。
+                </p>
+                <button id="export-backup" class="secondary-action" data-i18n="backupExport">
+                  バックアップ出力
+                </button>
+              </div>
+              <div class="restore-zone">
+                <h3 data-i18n="backupRestoreTitle">バックアップを復元</h3>
+                <p
+                  id="backup-restore-warning"
+                  class="backup-warning"
+                  data-i18n="backupRestoreWarning"
+                >
+                  復元すると現在の設定・販売履歴・購入履歴を置き換えます。
+                </p>
+                <button id="import-backup" class="danger" data-i18n="backupImport">
+                  バックアップから復元
+                </button>
+              </div>
+            </div>
+            <p id="backup-status" class="backup-status" role="status" aria-live="polite"></p>
+          </section>
+        </div>
+      </main>
+    </div>
 
     <script type="module" src="options.js"></script>
   </body>

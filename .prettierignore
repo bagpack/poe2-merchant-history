@@ -1,6 +1,7 @@
 .github/
 .agent/
 .agents/
+.impeccable/
 chart.umd.min.js
 public/chart.umd.min.js
 docs/

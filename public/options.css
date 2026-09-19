@@ -1,32 +1,54 @@
-/* Hallmark · modern-minimal · two-section settings desk · design-system: docs/DESIGN.md · designed-as-app */
+/* Impeccable · manifest and backup vault · operate mode · design-system: docs/DESIGN.md */
 @import url("./workspace.css");
 
-.options {
-  max-width: 1168px;
+:root {
+  --panel-deep: var(--card);
+  --panel-wash: rgb(234 217 175 / 6%);
+}
+
+.options-workspace {
+  min-width: 0;
+}
+
+.options-header {
+  min-height: 190px;
 }
 
 .settings-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  align-items: start;
-  gap: 24px;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(480px, 1.25fr);
+  align-items: stretch;
+  gap: 18px;
+  padding: 24px 28px 56px;
 }
 
 .card {
   min-width: 0;
-  padding: 24px;
+  min-height: 500px;
+  padding: 32px;
   border: 1px solid var(--border);
-  border-radius: var(--surface-radius);
-  background: var(--card);
+  background: var(--panel-deep);
 }
 
 .card h2 {
-  margin-bottom: 12px;
-  font-size: 20px;
+  font-size: 24px;
 }
 
-.card > p {
-  margin-bottom: 24px;
+.section-heading {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-heading p {
+  max-width: 68ch;
+  margin-top: 10px;
+}
+
+.connection-manifest {
+  background:
+    linear-gradient(rgb(17 20 25 / 70%), rgb(17 20 25 / 70%)),
+    url("assets/textures/film-grain.png") center / cover,
+    var(--panel-deep);
 }
 
 .cookie-row {
@@ -35,59 +57,125 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 16px 0;
+  min-height: 62px;
+  padding: 18px 0;
   border-bottom: 1px solid var(--border);
   overflow-wrap: anywhere;
 }
 
 .status-ok {
   color: var(--success);
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.cookie-row .status-ok::before,
+.cookie-row .status-missing::before {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border-radius: 50%;
+  content: "";
+  background: currentcolor;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 5%);
 }
 
 .status-missing {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: 700;
 }
 
-#refresh-cookies {
-  margin-top: 12px;
-  display: block;
+#cookie-guidance {
+  margin-top: 20px;
+  line-height: 1.65;
 }
 
-.backup-actions {
+.connection-record {
+  min-height: 238px;
+}
+
+.connection-actions {
   display: grid;
-  gap: 24px;
-}
-
-.restore-zone {
+  gap: 10px;
   padding-top: 24px;
   border-top: 1px solid var(--border);
 }
 
-.backup-warning {
-  margin-bottom: 16px;
-  color: var(--danger);
+.backup-vault {
+  background: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--panel-deep);
 }
 
 .backup-status {
   min-height: 1.5em;
-  margin-top: 16px;
-  font-weight: 600;
+  margin-top: 8px;
+  font-weight: 700;
 }
 
-@media (width <= 768px) {
+.backup-status:not(:empty) {
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.backup-actions {
+  display: grid;
+  gap: 0;
+}
+
+.export-zone,
+.restore-zone {
+  display: grid;
+  gap: 12px;
+  padding: 26px 0;
+}
+
+.restore-zone {
+  border-top: 1px solid var(--border);
+}
+
+.export-zone h3,
+.restore-zone h3 {
+  font-size: 16px;
+}
+
+.export-zone p {
+  margin-bottom: 6px;
+}
+
+.backup-warning {
+  max-width: 58ch;
+  margin-bottom: 6px;
+  color: var(--danger);
+  font-weight: 650;
+}
+
+.backup-vault .secondary-action,
+.backup-vault .danger {
+  width: 100%;
+}
+
+@media (width <= 1080px) {
   .settings-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
+  }
+}
+
+@media (width <= 600px) {
+  .settings-grid {
+    gap: 14px;
+    padding: 14px 12px 32px;
   }
 
   .card {
-    padding: 16px;
+    min-height: 0;
+    padding: 20px;
   }
-}
 
-#cookie-guidance {
-  margin-top: 16px;
-  margin-bottom: 16px;
+  .export-zone,
+  .restore-zone {
+    padding-block: 22px;
+  }
+
+  .connection-record {
+    min-height: 0;
+  }
 }

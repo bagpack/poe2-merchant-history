@@ -6,141 +6,140 @@
     <title data-i18n="appTitle">PoE2 Merchant History</title>
     <link rel="stylesheet" href="popup.css" />
     <link rel="stylesheet" href="item-detail.css" />
-    <script src="chart.umd.min.js"></script>
   </head>
   <body>
-    <div class="site-masthead">
-      <div class="masthead-inner">
+    <div class="film-app">
+      <aside class="film-nav">
         <a class="brand" href="popup.html">PoE2 <span>Merchant History</span></a>
         <nav aria-label="Main navigation" data-i18n-aria-label="mainNavigation">
           <a href="popup.html" data-i18n="tableTitle" aria-current="page">Sales history</a>
           <a href="purchase-history.html" data-i18n="purchaseHistoryTitle">Purchase History</a>
           <a href="options.html" data-i18n="settingsTitle">Settings</a>
         </nav>
-      </div>
-    </div>
+      </aside>
 
-    <main class="workspace sales-workspace">
-      <header class="page-heading app-header">
-        <div>
-          <h1 data-i18n="tableTitle">Sales history</h1>
-          <p data-i18n="appSubtitle">リーグ別の販売履歴を確認</p>
-        </div>
-      </header>
-
-      <section class="controls">
-        <label>
-          <span data-i18n="labelLeague">リーグ</span>
-          <select id="league-select"></select>
-        </label>
-        <label>
-          <span data-i18n="labelLanguage">言語</span>
-          <select id="language-select">
-            <option value="en" data-i18n="languageEnglish">English</option>
-            <option value="ja" data-i18n="languageJapanese">日本語</option>
-          </select>
-        </label>
-        <button id="refresh-btn" data-i18n="buttonRefresh">更新</button>
-        <p id="sales-status" class="page-feedback" role="status" aria-live="polite"></p>
-      </section>
-
-      <div class="overview-grid">
-        <section class="summary">
-          <h2 data-i18n="summaryTitle">総計</h2>
-          <div id="totals" class="totals"></div>
-        </section>
-
-        <section class="purchase-summary">
-          <div>
-            <h2 data-i18n="purchasePendingTitle">Pending purchases</h2>
-            <p>
-              <strong id="purchase-pending-count">0</strong>
-              <span data-i18n="purchasePendingUnit">items</span>
-            </p>
-            <p id="purchase-pending-error" role="status" hidden></p>
-            <ul id="purchase-pending-list"></ul>
+      <main class="sales-workspace">
+        <header class="bench-header">
+          <div class="title-block">
+            <h1 data-i18n="tableTitle">Sales history</h1>
           </div>
-          <a
-            id="open-purchase-history"
-            class="button-link"
-            href="purchase-history.html"
-            data-i18n="purchaseOpenHistory"
-            >Open purchase history</a
-          >
-        </section>
-      </div>
 
-      <section id="sales-chart-section" class="chart-section" hidden>
-        <div class="chart-header">
-          <h2 id="chart-title" data-i18n="chartTitle">売上推移</h2>
-          <span class="chart-note" data-i18n="chartNote">日次・通貨別</span>
-        </div>
-        <canvas
-          id="sales-chart"
-          height="160"
-          role="img"
-          aria-labelledby="chart-title"
-          aria-describedby="chart-data-label"
-        ></canvas>
-        <details>
-          <summary id="chart-data-label" data-i18n="chartData">Daily totals as a table</summary>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col" data-i18n="tableHeaderDate">Date</th>
-                <th scope="col" data-i18n="tableHeaderCurrency">Currency</th>
-                <th scope="col" data-i18n="tableHeaderAmount">Amount</th>
-              </tr>
-            </thead>
-            <tbody id="chart-data"></tbody>
-          </table>
-        </details>
-      </section>
-
-      <section class="table-section">
-        <div class="table-header">
-          <h2 id="sales-history-title" data-i18n="tableTitle">販売履歴</h2>
-          <div class="table-controls">
-            <label class="search-control">
-              <span data-i18n="searchLabel">アイテム名を検索</span>
-              <input
-                id="search-input"
-                type="search"
-                placeholder="アイテム名で検索"
-                data-i18n-placeholder="searchPlaceholder"
-              />
+          <section class="controls" aria-label="Workspace controls">
+            <label>
+              <span data-i18n="labelLeague">リーグ</span>
+              <select id="league-select"></select>
             </label>
-            <label class="page-size-control">
-              <span data-i18n="pageSizeLabel">1ページの表示件数</span>
-              <select id="page-size">
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="200">200</option>
+            <label>
+              <span data-i18n="labelLanguage">言語</span>
+              <select id="language-select">
+                <option value="en" data-i18n="languageEnglish">English</option>
+                <option value="ja" data-i18n="languageJapanese">日本語</option>
               </select>
             </label>
-            <button id="csv-export" data-i18n="buttonCsv">CSV出力</button>
-          </div>
+            <button id="refresh-btn" data-i18n="buttonRefresh">更新</button>
+            <p id="sales-status" class="page-feedback" role="status" aria-live="polite"></p>
+          </section>
+        </header>
+
+        <section id="sales-chart-section" class="film-rail-section chart-section" hidden>
+          <header class="film-rail-header">
+            <h2 id="chart-title" data-i18n="salesRailTitle">日別販売</h2>
+          </header>
+          <div
+            id="sales-chart"
+            class="film-frames"
+            role="group"
+            aria-labelledby="chart-title"
+          ></div>
+          <button id="show-all-dates" class="secondary-action" data-i18n="salesAllDates">
+            全期間
+          </button>
+          <details class="chart-data-details">
+            <summary id="chart-data-label" data-i18n="chartData">Daily totals as a table</summary>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col" data-i18n="tableHeaderDate">Date</th>
+                  <th scope="col" data-i18n="tableHeaderCurrency">Currency</th>
+                  <th scope="col" data-i18n="tableHeaderAmount">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="chart-data"></tbody>
+            </table>
+          </details>
+        </section>
+
+        <div class="bench-lower">
+          <section class="purchase-summary">
+            <header>
+              <h2 data-i18n="purchasePendingTitle">Pending purchases</h2>
+              <p>
+                <strong id="purchase-pending-count">0</strong>
+                <span data-i18n="purchasePendingUnit">items</span>
+              </p>
+            </header>
+            <p id="purchase-pending-error" role="status" hidden></p>
+            <ul id="purchase-pending-list"></ul>
+            <a
+              id="open-purchase-history"
+              class="button-link"
+              href="purchase-history.html"
+              data-i18n="purchaseOpenHistory"
+              >Open purchase history</a
+            >
+          </section>
+
+          <section class="table-section">
+            <div class="table-header">
+              <div>
+                <h2 id="sales-history-title" data-i18n="tableTitle">販売履歴</h2>
+                <p id="selected-date-label" aria-live="polite"></p>
+              </div>
+              <div class="table-controls">
+                <label class="search-control">
+                  <span data-i18n="searchLabel">アイテム名を検索</span>
+                  <input
+                    id="search-input"
+                    type="search"
+                    placeholder="アイテム名で検索"
+                    data-i18n-placeholder="searchPlaceholder"
+                  />
+                </label>
+                <label class="page-size-control">
+                  <span data-i18n="pageSizeLabel">1ページの表示件数</span>
+                  <select id="page-size">
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                  </select>
+                </label>
+                <button id="csv-export" data-i18n="buttonCsv">CSV出力</button>
+              </div>
+            </div>
+            <div class="table-wrapper">
+              <table aria-labelledby="sales-history-title">
+                <thead>
+                  <tr>
+                    <th scope="col" data-i18n="tableHeaderDate">日時</th>
+                    <th scope="col" data-i18n="tableHeaderItem">アイテム名</th>
+                    <th scope="col" data-i18n="tableHeaderCurrency">通貨</th>
+                    <th scope="col" data-i18n="tableHeaderAmount">個数</th>
+                  </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <button id="prev-page" data-i18n="buttonPrev">前へ</button>
+              <span id="page-info"></span>
+              <button id="next-page" data-i18n="buttonNext">次へ</button>
+            </div>
+          </section>
+
+          <aside id="day-summary" class="day-summary" aria-live="polite"></aside>
         </div>
-        <div class="table-wrapper">
-          <table aria-labelledby="sales-history-title">
-            <thead>
-              <tr>
-                <th scope="col" data-i18n="tableHeaderDate">日時</th>
-                <th scope="col" data-i18n="tableHeaderItem">アイテム名</th>
-                <th scope="col" data-i18n="tableHeaderCurrency">通貨</th>
-                <th scope="col" data-i18n="tableHeaderAmount">個数</th>
-              </tr>
-            </thead>
-            <tbody id="history-body"></tbody>
-          </table>
-        </div>
-        <div class="pagination">
-          <button id="prev-page" data-i18n="buttonPrev">前へ</button>
-          <span id="page-info"></span>
-          <button id="next-page" data-i18n="buttonNext">次へ</button>
-        </div>
-      </section>
-    </main>
+      </main>
+    </div>
 
     <dialog
       id="modal"

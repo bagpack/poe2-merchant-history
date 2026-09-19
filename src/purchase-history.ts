@@ -17,7 +17,7 @@ import { getUndoProgress, getUndoSecondsRemaining } from "./purchase/undo.js";
 import { DetailRenderer } from "./popup/detail-renderer.js";
 import type { ItemDetails, Language } from "./popup/types.js";
 
-const compactLayout = window.matchMedia("(width < 1260px)");
+const compactLayout = window.matchMedia("(width <= 1260px)");
 const advancedFilters = requireElement("purchase-advanced-filters", HTMLDetailsElement);
 const dateError = requireElement("purchase-date-error", HTMLElement);
 const resultCount = requireElement("purchase-result-count", HTMLElement);

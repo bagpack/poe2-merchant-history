@@ -131,7 +131,6 @@ export interface PopupDom extends ItemDetailDom {
   leagueSelect: HTMLSelectElement;
   refreshButton: HTMLButtonElement;
   languageSelect: HTMLSelectElement;
-  totalsContainer: HTMLElement;
   historyBody: HTMLTableSectionElement;
   searchInput: HTMLInputElement;
   pageSizeSelect: HTMLSelectElement;
@@ -143,36 +142,10 @@ export interface PopupDom extends ItemDetailDom {
   modalTitle: HTMLElement;
   modalMessage: HTMLElement;
   modalClose: HTMLButtonElement;
-  chartCanvas: HTMLCanvasElement;
+  salesRail: HTMLElement;
+  chartDataBody: HTMLTableSectionElement;
+  daySummary: HTMLElement;
+  showAllDatesButton: HTMLButtonElement;
+  selectedDateLabel: HTMLElement;
   chartSection: HTMLElement;
-}
-
-export interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-}
-
-export interface ChartData {
-  labels: string[];
-  datasets: ChartDataset[];
-}
-
-export interface ChartLike {
-  data: ChartData;
-  update: () => void;
-  destroy?: () => void;
-}
-
-export interface ChartCtor {
-  new (
-    canvas: HTMLCanvasElement,
-    config: {
-      type: string;
-      data: ChartData;
-      options: Record<string, unknown>;
-    }
-  ): ChartLike;
 }
