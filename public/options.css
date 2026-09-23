@@ -10,10 +10,6 @@
   min-width: 0;
 }
 
-.options-header {
-  min-height: 190px;
-}
-
 .options-header > label {
   width: 180px;
   flex: none;

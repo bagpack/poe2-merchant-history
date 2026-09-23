@@ -39,3 +39,35 @@ test("all workspace pages share localized, keyboard-accessible navigation", asyn
     await extension.dispose();
   }
 });
+
+test("workspace headers align across desktop pages", async () => {
+  const extension = await launchExtensionContext();
+  try {
+    await extension.context.route("**/api/trade2/data/leagues", (route) =>
+      route.fulfill({ json: { result: [{ id: "Standard", text: "Standard", realm: "poe2" }] } })
+    );
+    const page = await extension.context.newPage();
+    await page.goto(`chrome-extension://${extension.extensionId}/options.html`);
+    for (const language of ["en", "ja"]) {
+      await page.evaluate((uiLanguage) => chrome.storage.local.set({ uiLanguage }), language);
+      for (const width of [801, 900, 901, 1024, 1180, 1181, 1440]) {
+        await page.setViewportSize({ width, height: 960 });
+        const heights = [];
+        for (const destination of ["popup", "purchase-history", "options"]) {
+          await page.goto(`chrome-extension://${extension.extensionId}/${destination}.html`);
+          heights.push(
+            await page
+              .locator("main > header")
+              .evaluate((header) => header.getBoundingClientRect().height)
+          );
+        }
+        expect(
+          Math.max(...heights) - Math.min(...heights),
+          `${language}, ${width}px: ${heights.join(", ")}`
+        ).toBeLessThanOrEqual(1);
+      }
+    }
+  } finally {
+    await extension.dispose();
+  }
+});

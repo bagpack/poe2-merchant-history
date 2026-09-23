@@ -26,6 +26,7 @@
   --row-hover: #24231f;
   --control-radius: 6px;
   --surface-radius: 8px;
+  --workspace-header-min-height: 144px;
   --font-body: system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
   --shadow: none;
   --button-shadow: none;
