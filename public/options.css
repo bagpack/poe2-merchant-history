@@ -14,6 +14,11 @@
   min-height: 190px;
 }
 
+.options-header > label {
+  width: 180px;
+  flex: none;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: minmax(320px, 0.9fr) minmax(480px, 1.25fr);

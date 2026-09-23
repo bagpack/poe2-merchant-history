@@ -192,7 +192,7 @@ test("options backup export includes storage and IndexedDB data", async () => {
   }
 });
 
-test("popup loads leagues and supports language switch", async () => {
+test("popup loads leagues and uses the language selected in settings", async () => {
   const extension = await launchExtensionContext();
 
   try {
@@ -218,7 +218,10 @@ test("popup loads leagues and supports language switch", async () => {
     await expect(page.locator("#league-select")).toContainText("Runes of Aldur");
     await expect(page.locator(".chart-section")).toBeHidden();
 
+    await page.getByRole("link", { name: "Settings" }).click();
     await page.selectOption("#language-select", "ja");
+    await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+    await page.getByRole("link", { name: "販売履歴" }).click();
     await expect(page.locator("[data-i18n='labelLeague']")).toHaveText("リーグ");
     await expect(page.locator("#sales-history-title")).toHaveText("販売履歴");
     await expect(page.getByLabel("アイテム名を検索")).toBeVisible();
@@ -258,7 +261,7 @@ test("popup loads leagues and supports language switch", async () => {
       expect(pageWidth.scroll).toBeLessThanOrEqual(pageWidth.client);
       if (width === 320) {
         const primaryControlHeights = await page
-          .locator("#league-select, #language-select, #refresh-btn, #open-purchase-history")
+          .locator("#league-select, #refresh-btn, #open-purchase-history")
           .evaluateAll((elements) =>
             elements.map((element) => Math.round(element.getBoundingClientRect().height))
           );

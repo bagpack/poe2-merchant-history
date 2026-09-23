@@ -1,10 +1,4 @@
-import {
-  applyTranslations,
-  getLocaleForLanguage,
-  loadUiLanguage,
-  saveUiLanguage,
-  t,
-} from "./i18n.js";
+import { applyTranslations, getLocaleForLanguage, loadUiLanguage, t } from "./i18n.js";
 import { buildPurchaseCsv, buildPurchaseJson } from "./purchase/export.js";
 import {
   loadPurchaseHistoryFilterPreferences,
@@ -38,7 +32,6 @@ const searchInput = requireElement("purchase-search", HTMLInputElement);
 const dateFrom = requireElement("purchase-date-from", HTMLInputElement);
 const dateTo = requireElement("purchase-date-to", HTMLInputElement);
 const clearFiltersButton = requireElement("clear-purchase-filters", HTMLButtonElement);
-const languageSelect = requireElement("purchase-language", HTMLSelectElement);
 const detailModal = requireElement("detail-modal", HTMLDialogElement);
 const detailRenderer = new DetailRenderer(
   {
@@ -72,7 +65,6 @@ void init();
 async function init(): Promise<void> {
   language = await loadUiLanguage();
   filterPreferences = await loadPurchaseHistoryFilterPreferences();
-  languageSelect.value = language;
   applyLanguage();
   bindEvents();
   advancedFilters.open = Boolean(
@@ -111,15 +103,6 @@ function bindEvents(): void {
     filterPreferences = { status: "", itemName: "", league: "", dateFrom: "", dateTo: "" };
     restoreFilterPreferences();
     void savePurchaseHistoryFilterPreferences(filterPreferences).catch(() => undefined);
-    render();
-  });
-  languageSelect.addEventListener("change", async () => {
-    language = languageSelect.value === "ja" ? "ja" : "en";
-    await saveUiLanguage(language);
-    applyLanguage();
-    pageStatus.textContent = "";
-    renderFilterOptions();
-    restoreFilterPreferences();
     render();
   });
   body.addEventListener("click", (event) => void handleRowAction(event));

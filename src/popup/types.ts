@@ -130,7 +130,6 @@ export interface PopupDom extends ItemDetailDom {
   purchasePendingList: HTMLUListElement;
   leagueSelect: HTMLSelectElement;
   refreshButton: HTMLButtonElement;
-  languageSelect: HTMLSelectElement;
   historyBody: HTMLTableSectionElement;
   searchInput: HTMLInputElement;
   pageSizeSelect: HTMLSelectElement;

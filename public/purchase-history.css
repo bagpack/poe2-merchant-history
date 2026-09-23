@@ -13,11 +13,6 @@
   min-width: 0;
 }
 
-.case-header > label {
-  width: 180px;
-  flex: none;
-}
-
 .case-layout {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -550,10 +545,6 @@ html.has-undo {
 }
 
 @media (width <= 600px) {
-  .case-header > label {
-    width: 100%;
-  }
-
   .case-layout {
     gap: 14px;
     padding: 14px 12px 32px;

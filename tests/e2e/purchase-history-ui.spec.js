@@ -345,7 +345,9 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await page.locator("#delete-all-purchases").click();
     await expect(page.locator("#purchase-history-body .purchase-row")).toHaveCount(0);
 
-    await page.selectOption("#purchase-language", "ja");
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.selectOption("#language-select", "ja");
+    await page.getByRole("link", { name: "購入履歴" }).click();
     await expect(page.locator(".filters")).toHaveAttribute("aria-label", "絞り込み");
     await expect(page.locator("#clear-purchase-filters")).toHaveText("絞り込みを解除");
     await expect(page.locator("#delete-all-purchases")).toHaveText("購入履歴を全件削除");

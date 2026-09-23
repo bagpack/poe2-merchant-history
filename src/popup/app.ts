@@ -1,10 +1,4 @@
-import {
-  applyTranslations,
-  loadUiLanguage,
-  normalizeLanguage,
-  saveUiLanguage,
-  t,
-} from "../i18n.js";
+import { applyTranslations, loadUiLanguage, normalizeLanguage, t } from "../i18n.js";
 import { migrateLegacyDbIfNeeded } from "../shared.js";
 import { isPurchaseHistoryChangedMessage } from "../purchase/messages.js";
 import { ChartService } from "./chart-service.js";
@@ -44,7 +38,6 @@ export class PopupApp {
 
     try {
       const storedLanguage = await loadUiLanguage();
-      this.dom.languageSelect.value = storedLanguage;
       this.applyLanguage(storedLanguage);
       await this.refreshPurchaseSummary();
 
@@ -98,30 +91,6 @@ export class PopupApp {
     });
 
     this.dom.refreshButton.addEventListener("click", async () => this.handleUpdate());
-
-    this.dom.languageSelect.addEventListener("change", async () => {
-      const selected = this.dom.languageSelect.value;
-      await saveUiLanguage(selected);
-      this.applyLanguage(selected);
-      this.state.setCurrentPage(1);
-      try {
-        const leagues = await this.historyService.loadLeagues();
-        this.setOptions(leagues);
-        const stored = await this.historyService.loadSelectedLeague();
-        if (stored && leagues.some((league) => league.id === stored)) {
-          this.dom.leagueSelect.value = stored;
-        }
-      } catch (_error) {
-        this.showModal(
-          t(this.state.getCurrentLanguage(), "modalErrorTitle"),
-          t(this.state.getCurrentLanguage(), "modalLeagueFetchFailed")
-        );
-      }
-      if (this.dom.leagueSelect.value) {
-        await migrateLegacyDbIfNeeded(this.dom.leagueSelect.value);
-        await this.refreshData(this.dom.leagueSelect.value);
-      }
-    });
 
     this.dom.csvExportButton.addEventListener("click", () => this.handleCsvExport());
 

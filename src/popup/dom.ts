@@ -15,7 +15,6 @@ export function getPopupDom(): PopupDom {
     purchasePendingList: requireElement("purchase-pending-list", HTMLUListElement),
     leagueSelect: requireElement("league-select", HTMLSelectElement),
     refreshButton: requireElement("refresh-btn", HTMLButtonElement),
-    languageSelect: requireElement("language-select", HTMLSelectElement),
     historyBody: requireElement("history-body", HTMLTableSectionElement),
     searchInput: requireElement("search-input", HTMLInputElement),
     pageSizeSelect: requireElement("page-size", HTMLSelectElement),

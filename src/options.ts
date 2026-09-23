@@ -3,6 +3,7 @@ import {
   getHostForLanguage,
   loadUiLanguage,
   normalizeLanguage,
+  saveUiLanguage,
   t,
 } from "./i18n.js";
 
@@ -342,6 +343,7 @@ class OptionsPageController {
   private readonly exportButton: HTMLButtonElement;
   private readonly importButton: HTMLButtonElement;
   private readonly backupStatus: HTMLElement;
+  private readonly languageSelect: HTMLSelectElement;
   private readonly cookieService: CookieService;
   private readonly backupService: BackupService;
   private readonly presenter: CookieStatusPresenter;
@@ -352,6 +354,7 @@ class OptionsPageController {
     const exportButton = document.getElementById("export-backup");
     const importButton = document.getElementById("import-backup");
     const backupStatus = document.getElementById("backup-status");
+    const languageSelect = document.getElementById("language-select");
 
     if (!(cookieList instanceof HTMLElement)) {
       throw new Error("cookie list element not found");
@@ -368,12 +371,16 @@ class OptionsPageController {
     if (!(backupStatus instanceof HTMLElement)) {
       throw new Error("backup status element not found");
     }
+    if (!(languageSelect instanceof HTMLSelectElement)) {
+      throw new Error("language select element not found");
+    }
 
     this.cookieListElement = cookieList;
     this.refreshButton = refreshButton;
     this.exportButton = exportButton;
     this.importButton = importButton;
     this.backupStatus = backupStatus;
+    this.languageSelect = languageSelect;
     this.cookieService = new CookieService(() => this.currentLanguage);
     this.backupService = new BackupService();
     this.presenter = new CookieStatusPresenter(this.cookieListElement, () => this.currentLanguage);
@@ -394,6 +401,9 @@ class OptionsPageController {
     this.importButton.addEventListener("click", () => {
       void this.handleImport();
     });
+    this.languageSelect.addEventListener("change", () => {
+      void saveUiLanguage(this.languageSelect.value);
+    });
 
     const storedLanguage = await loadUiLanguage();
     this.currentLanguage = normalizeLanguage(storedLanguage);
@@ -413,6 +423,7 @@ class OptionsPageController {
 
   private applyLanguage(): void {
     document.documentElement.lang = this.currentLanguage;
+    this.languageSelect.value = this.currentLanguage;
     applyTranslations(document, this.currentLanguage);
   }
 
