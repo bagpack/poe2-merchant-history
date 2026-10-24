@@ -1,8 +1,9 @@
 import { getPurchaseRecordId, mergePurchaseCandidate } from "./candidate.js";
 import { markPurchaseAsPurchased } from "./status.js";
-import { PURCHASE_UNDO_WINDOW_MS } from "./undo.js";
+import { isUndoInvalidatedByCandidate, PURCHASE_UNDO_WINDOW_MS } from "./undo.js";
 import type {
   PurchaseCandidateInput,
+  PurchaseCandidateSaveResult,
   PurchaseMutationResult,
   PurchaseRecord,
   PurchaseUndoAction,
@@ -17,7 +18,7 @@ const UNDO_STORE = "purchase_undo";
 const UNDO_KEY = "latest";
 
 export class PurchaseRepository {
-  async upsertCandidate(candidate: PurchaseCandidateInput): Promise<PurchaseRecord> {
+  async upsertCandidate(candidate: PurchaseCandidateInput): Promise<PurchaseCandidateSaveResult> {
     const db = await openPurchaseDb();
     try {
       const tx = db.transaction([PURCHASES_STORE, UNDO_STORE], "readwrite");
@@ -26,9 +27,16 @@ export class PurchaseRepository {
       const existing = (await requestToPromise(store.get(id))) as PurchaseRecord | undefined;
       const record = mergePurchaseCandidate(existing ?? null, candidate);
       store.put(record);
-      tx.objectStore(UNDO_STORE).clear();
+      const undoStore = tx.objectStore(UNDO_STORE);
+      const latestUndo =
+        ((await requestToPromise(undoStore.get(UNDO_KEY))) as PurchaseUndoAction | undefined) ??
+        null;
+      const invalidated = isUndoInvalidatedByCandidate(latestUndo, id);
+      if (invalidated) {
+        undoStore.delete(UNDO_KEY);
+      }
       await transactionComplete(tx);
-      return record;
+      return { record, undo: invalidated ? null : latestUndo };
     } finally {
       db.close();
     }

@@ -1,6 +1,7 @@
 import { deepStrictEqual, strictEqual } from "node:assert/strict";
 import { test } from "node:test";
 import {
+  changesPurchaseHistory,
   isPurchaseHistoryChangedMessage,
   parsePurchaseHistoryMessage,
 } from "../../dist/purchase/messages.js";
@@ -51,4 +52,13 @@ test("purchase history change event is separate from command messages", () => {
   strictEqual(isPurchaseHistoryChangedMessage({ type: "purchase/changed", undoToken: "" }), false);
   strictEqual(isPurchaseHistoryChangedMessage({ type: "purchase/list" }), false);
   strictEqual(parsePurchaseHistoryMessage({ type: "purchase/changed" }), null);
+});
+
+test("read-only purchase history requests do not count as changes", () => {
+  strictEqual(changesPurchaseHistory({ type: "purchase/list" }), false);
+  strictEqual(changesPurchaseHistory({ type: "purchase/undo-current" }), false);
+  strictEqual(changesPurchaseHistory({ type: "purchase/mark-purchased", id: "a" }), true);
+  strictEqual(changesPurchaseHistory({ type: "purchase/delete", id: "a" }), true);
+  strictEqual(changesPurchaseHistory({ type: "purchase/undo", token: "t" }), true);
+  strictEqual(changesPurchaseHistory({ type: "purchase/delete-all" }), true);
 });

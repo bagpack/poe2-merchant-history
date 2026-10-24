@@ -11,6 +11,10 @@ export type PurchaseHistoryChangedMessage = {
   undoToken?: string;
 };
 
+export function changesPurchaseHistory(message: PurchaseHistoryMessage): boolean {
+  return message.type !== "purchase/list" && message.type !== "purchase/undo-current";
+}
+
 export function parsePurchaseHistoryMessage(value: unknown): PurchaseHistoryMessage | null {
   if (!isRecord(value) || typeof value.type !== "string") {
     return null;

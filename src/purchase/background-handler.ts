@@ -14,9 +14,9 @@ export async function savePurchaseCandidate(message: unknown) {
     throw new Error("INVALID_PURCHASE_CANDIDATE");
   }
 
-  const record = await repository.upsertCandidate(candidate.payload);
+  const result = await repository.upsertCandidate(candidate.payload);
   await updateBadge();
-  return record;
+  return result;
 }
 
 export async function handlePurchaseHistoryMessage(message: PurchaseHistoryMessage) {

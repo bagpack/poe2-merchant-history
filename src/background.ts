@@ -5,7 +5,7 @@ import {
   isPurchaseCandidateMessage,
   savePurchaseCandidate,
 } from "./purchase/background-handler.js";
-import { parsePurchaseHistoryMessage } from "./purchase/messages.js";
+import { changesPurchaseHistory, parsePurchaseHistoryMessage } from "./purchase/messages.js";
 
 const REQUIRED_COOKIES = ["POESESSID"] as const;
 
@@ -181,29 +181,32 @@ class TradeHistoryRepository {
     }
 
     const db = await openLeagueDb(leagueId, language);
-    const tx = db.transaction("trade_history", "readwrite");
-    const store = tx.objectStore("trade_history");
-
-    let addedCount = 0;
     try {
-      for (const record of records) {
-        const exists = await requestToPromise(store.get(record.id));
-        if (exists) {
-          continue;
-        }
-        const added = await this.addRecord(store, record);
-        if (added) {
-          addedCount += 1;
-        }
-      }
-    } catch (error) {
-      tx.abort();
-      throw error;
-    }
+      const tx = db.transaction("trade_history", "readwrite");
+      const store = tx.objectStore("trade_history");
 
-    await transactionComplete(tx);
-    db.close();
-    return addedCount;
+      let addedCount = 0;
+      try {
+        for (const record of records) {
+          const exists = await requestToPromise(store.get(record.id));
+          if (exists) {
+            continue;
+          }
+          const added = await this.addRecord(store, record);
+          if (added) {
+            addedCount += 1;
+          }
+        }
+      } catch (error) {
+        tx.abort();
+        throw error;
+      }
+
+      await transactionComplete(tx);
+      return addedCount;
+    } finally {
+      db.close();
+    }
   }
 
   async countRecords(leagueId: string, language: string): Promise<number> {
@@ -220,9 +223,11 @@ class TradeHistoryRepository {
     return new Promise((resolve, reject) => {
       const request = store.add(record);
       request.onsuccess = () => resolve(true);
-      request.onerror = () => {
+      request.onerror = (event) => {
         const error = request.error;
         if (error && error.name === "ConstraintError") {
+          // Keep the duplicate from aborting the rest of the batch.
+          event.preventDefault();
           resolve(false);
           return;
         }
@@ -306,8 +311,8 @@ const updateService = new HistoryUpdateService(
 chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
   if (isPurchaseCandidateMessage(message)) {
     savePurchaseCandidate(message)
-      .then((record) => {
-        notifyPurchaseHistoryChanged();
+      .then(({ record, undo }) => {
+        notifyPurchaseHistoryChanged(undo?.token);
         sendResponse({ ok: true, data: record });
       })
       .catch((error: unknown) =>
@@ -326,7 +331,7 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
   if (purchaseHistoryMessage) {
     handlePurchaseHistoryMessage(purchaseHistoryMessage)
       .then((data) => {
-        if (purchaseHistoryMessage.type !== "purchase/list") {
+        if (changesPurchaseHistory(purchaseHistoryMessage)) {
           notifyPurchaseHistoryChanged(readUndoToken(data));
         }
         sendResponse({ ok: true, data });

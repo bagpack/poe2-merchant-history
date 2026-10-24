@@ -72,3 +72,8 @@ export interface PurchaseUndoResult {
   type: PurchaseUndoType;
   record: PurchaseRecord;
 }
+
+export interface PurchaseCandidateSaveResult {
+  record: PurchaseRecord;
+  undo: PurchaseUndoAction | null;
+}
