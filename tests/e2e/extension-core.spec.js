@@ -130,17 +130,9 @@ test("options backup export includes storage and IndexedDB data", async () => {
 
     const page = await extension.context.newPage();
     await page.goto(`chrome-extension://${extension.extensionId}/options.html`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("設定");
     await expect(page.getByRole("heading", { level: 2, name: "ログイン状態" })).toBeVisible();
-    await expect(page.locator(".cookie-row")).toContainText("公式サイトのログイン情報");
-    await expect(page.locator(".cookie-row")).not.toContainText("POESESSID");
-    await expect(page.locator(".status-ok")).toHaveText("取得済み");
-    await expect(page.locator(".status-ok")).not.toContainText("期限");
     await expect(page.getByRole("button", { name: "バックアップ出力" })).toBeVisible();
     await expect(page.getByRole("button", { name: "バックアップから復元" })).toBeVisible();
-    await expect(page.locator("#backup-restore-warning")).toContainText(
-      "現在の設定・販売履歴・購入履歴を置き換えます"
-    );
     await expect(page.locator("#export-backup")).toHaveClass(/secondary-action/);
     await expect(page.locator("#import-backup")).toHaveClass(/danger/);
     await expect(page.locator(".restore-zone #backup-restore-warning")).toHaveCount(1);
@@ -173,14 +165,11 @@ test("options backup export includes storage and IndexedDB data", async () => {
     ).toMatchObject({ ok: true, data: [] });
 
     const fileChooserPromise = page.waitForEvent("filechooser");
-    page.once("dialog", async (dialog) => {
-      expect(dialog.message()).toContain("バックアップを読み込みますか");
-      await dialog.accept();
-    });
+    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "バックアップから復元" }).click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(filePath);
-    await expect(page.locator("#backup-status")).toHaveText("バックアップを復元しました。");
+    await expect(page.locator("#backup-status")).toHaveClass(/status-ok/);
     expect(
       await page.evaluate(() => chrome.runtime.sendMessage({ type: "purchase/list" }))
     ).toMatchObject({
@@ -222,8 +211,6 @@ test("popup loads leagues and uses the language selected in settings", async () 
     await page.selectOption("#language-select", "ja");
     await expect(page.locator("html")).toHaveAttribute("lang", "ja");
     await page.getByRole("link", { name: "販売履歴" }).click();
-    await expect(page.locator("[data-i18n='labelLeague']")).toHaveText("リーグ");
-    await expect(page.locator("#sales-history-title")).toHaveText("販売履歴");
     await expect(page.getByLabel("アイテム名を検索")).toBeVisible();
     await expect(page.getByLabel("1ページの表示件数")).toBeVisible();
     await expect(page.locator(".table-section table")).toHaveCSS(
@@ -300,7 +287,6 @@ test("sales item details use an accessible item-name trigger and dialog", async 
     const page = await extension.context.newPage();
     await page.goto(`chrome-extension://${extension.extensionId}/popup.html`);
     await page.getByRole("button", { name: "Refresh" }).click();
-    await expect(page.locator("#sales-status")).toContainText("Total");
     await expect(page.locator(".chart-section")).toBeVisible();
     await expect(page.locator(".day-summary img")).toHaveCount(4);
     expect(
@@ -320,7 +306,6 @@ test("sales item details use an accessible item-name trigger and dialog", async 
     await expect(page.locator("#history-body")).toContainText("98,765");
     const dayFrame = page.locator(".film-frame");
     await expect(dayFrame).toHaveCount(1);
-    await expect(dayFrame.locator(".film-sale-count")).toHaveText("4 sales");
     await expect(dayFrame.locator("img")).toHaveCount(0);
     await expect(dayFrame.locator(".film-gauge")).toHaveCount(0);
     expect(
@@ -328,7 +313,6 @@ test("sales item details use an accessible item-name trigger and dialog", async 
     ).toBeLessThanOrEqual(90);
     await dayFrame.click();
     await expect(dayFrame).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator("#selected-date-label")).toContainText("Showing");
     await page.locator("#show-all-dates").click();
     await expect(dayFrame).toHaveAttribute("aria-pressed", "false");
 

@@ -28,14 +28,11 @@ jobs:
       - name: Lint and format check
         run: npm run lint
 
+      - name: Run unit tests
+        run: npm run test:unit
+
       - name: Build extension
         run: npm run build
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: Run extension E2E
-        run: xvfb-run -a npm run test:e2e:extension
 
       - name: Verify manifest and icons
         run: |

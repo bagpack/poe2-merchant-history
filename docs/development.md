@@ -84,6 +84,7 @@
   拡張E2E（optionsのバックアップ出力、popupのリーグ読込/言語切替）
 
 `test:e2e:*` は `dist/` を拡張として読み込むため、実行前に `npm run build` が必要です。
+E2EはCIでは実行しないため、変更時はローカルで実行してください。CIではlint・unit test・buildを実行します。
 
 ## 5. ビルドの考え方
 

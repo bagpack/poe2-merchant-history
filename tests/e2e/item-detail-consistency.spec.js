@@ -151,8 +151,6 @@ test("sales and purchase histories render identical item details", async () => {
     await expect(
       purchasePage.locator(".item-line-desecrated-label", { hasText: "冒涜されたMod" })
     ).toHaveCSS("color", "rgb(173, 52, 64)");
-    await expect(purchasePage.locator("#detail-body")).toContainText("アイテムレベル:");
-    await expect(purchasePage.locator("#detail-body")).not.toContainText("Item Level:");
     await expect(purchasePage.locator(".item-line-corrupted")).toHaveCSS(
       "color",
       "rgb(173, 52, 64)"

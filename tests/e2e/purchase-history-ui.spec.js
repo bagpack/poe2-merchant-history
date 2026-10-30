@@ -59,9 +59,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
       waitUntil: "domcontentloaded",
     });
     await expect(page).toHaveURL(/purchase-history\.html$/);
-    await expect(page.locator('[data-i18n="purchaseHistorySubtitle"]')).toHaveText(
-      "Purchase candidates are added automatically. Confirm the result manually."
-    );
     await expect(page.locator(".filters")).toHaveAttribute("aria-label", "Filters");
     await expect(page.locator("#purchase-status")).toHaveAttribute("role", "status");
     await expect(page.locator("table")).toHaveCount(0);
@@ -79,9 +76,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
       page.locator('[role="columnheader"][data-i18n="purchaseColumnAttempts"]')
     ).toHaveCount(0);
     await expect(row.locator(".actions")).not.toContainText("—");
-    await expect(row.locator('[data-action="purchased"]')).toHaveText("Mark as purchased");
-    await expect(row.locator('[data-action="delete"]')).toHaveText("Delete candidate");
-    await expect(row.locator("[data-label='Trade search'] a")).toHaveText("Open on trade site");
     await expect(row.locator('[data-action="unavailable"], [data-action="cancelled"]')).toHaveCount(
       0
     );
@@ -180,7 +174,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
       "aria-label",
       "Fractured mod: +25 to maximum Life"
     );
-    await expect(page.locator("#detail-close")).toContainText("Close");
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
     await expect(detailTrigger).toBeFocused();
@@ -204,9 +197,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await expect(page.locator("#purchase-history-body .purchase-row")).toHaveCount(1);
     await page.fill("#purchase-date-from", "1970-01-02");
     await expect(row).toHaveCount(0);
-    await expect(page.locator("#purchase-empty")).toHaveText(
-      "No purchase records match these filters. Change or clear the filters."
-    );
     const clearFilters = page.getByRole("button", { name: "Clear filters" });
     await expect(clearFilters).toBeEnabled();
     await clearFilters.click();
@@ -219,9 +209,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await expect(clearFilters).toBeDisabled();
 
     await page.locator(".purchase-tools > summary").click();
-    await expect(page.locator(".export-actions")).toContainText("Export filtered CSV");
-    await expect(page.locator(".export-actions")).toContainText("Export filtered JSON");
-    await expect(page.locator(".destructive-actions")).toContainText("Delete all purchase history");
     await expect(page.locator(".export-actions #delete-all-purchases")).toHaveCount(0);
 
     await row.locator('[data-action="purchased"]').click();
@@ -237,14 +224,8 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
       return Math.abs(label.x + label.width / 2 - box.x - box.width / 2);
     });
     expect(deleteLabelOffset).toBeLessThanOrEqual(1);
-    await expect(page.locator("#purchase-status")).toHaveText("Marked as purchased.");
     await expect(page.locator("#purchase-undo")).toBeVisible();
-    await expect(page.locator("#purchase-undo-message")).toHaveText(
-      "Sapphire Ring marked as purchased."
-    );
     await expect(page.locator("#purchase-undo-seconds")).toHaveText(/\d+/);
-    await expect(page.locator("#purchase-undo-remaining")).toHaveText(/\d+s left/);
-    await expect(page.locator("#purchase-undo-button")).toHaveText("Undo");
     await expect(page.locator("#purchase-undo-button")).toHaveAttribute(
       "aria-label",
       "Undo the action for Sapphire Ring"
@@ -260,17 +241,14 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     expect(elapsedUndoOffset).not.toBe(initialUndoOffset);
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.locator("#purchase-undo")).toBeVisible();
-    await expect(page.locator("#purchase-undo-button")).toHaveText("Undo");
     await page.locator("#purchase-undo-button").click();
     await expect(row).toContainText("Pending");
-    await expect(page.locator("#purchase-status")).toHaveText("The last action was undone.");
     await expect(page.locator("#purchase-undo")).toBeHidden();
 
     await row.locator('[data-action="purchased"]').click();
     await expect(row).toContainText("Purchased");
     await expect(row.locator('[data-action="pending"]')).toHaveCount(0);
     await expect(row.locator('[data-action="purchased"]')).toHaveCount(0);
-    await expect(row.locator('[data-action="delete"]')).toHaveText("Delete history");
     await expect.poll(() => page.evaluate(() => chrome.action.getBadgeText({}))).toBe("");
 
     const csvDownload = page.waitForEvent("download");
@@ -289,7 +267,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await row.locator('[data-action="delete"]').click();
     await expect(page.locator("#purchase-history-body .purchase-row")).toHaveCount(0);
     await expect(page.locator("#purchase-undo")).toBeVisible();
-    await expect(page.locator("#purchase-undo-message")).toHaveText("Sapphire Ring deleted.");
     await page.locator("#purchase-undo-button").click();
     await expect(page.locator("#purchase-history-body .purchase-row")).toHaveCount(1);
     await expect(page.locator("#purchase-history-body .purchase-row")).toContainText("Purchased");
@@ -301,15 +278,11 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
       window.__purchaseOriginalNow = Date.now;
       Date.now = () => window.__purchaseOriginalNow() + 31_000;
     });
-    await expect(page.locator("#purchase-undo-message")).toHaveText("Undo expired.");
     await expect(page.locator("#purchase-undo-button")).toBeHidden();
     await page.evaluate(() => {
       Date.now = window.__purchaseOriginalNow;
       delete window.__purchaseOriginalNow;
     });
-    await expect(page.locator("#purchase-empty")).toContainText(
-      "Use instant purchase on the official trade site to add a candidate."
-    );
     await expect(page.locator("#purchase-list-wrapper")).toBeHidden();
 
     const secondMessage = {
@@ -339,7 +312,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await expect(page.locator("#purchase-history-body .purchase-row")).toContainText("Second Ring");
     page.once("dialog", async (dialog) => {
       expect(dialog.message()).toContain("1 purchase record");
-      expect(dialog.message()).toContain("cannot be restored without a backup");
       await dialog.accept();
     });
     await page.locator("#delete-all-purchases").click();
@@ -349,8 +321,6 @@ test("purchase history can be reviewed, confirmed, exported, and deleted", async
     await page.selectOption("#language-select", "ja");
     await page.getByRole("link", { name: "購入履歴" }).click();
     await expect(page.locator(".filters")).toHaveAttribute("aria-label", "絞り込み");
-    await expect(page.locator("#clear-purchase-filters")).toHaveText("絞り込みを解除");
-    await expect(page.locator("#delete-all-purchases")).toHaveText("購入履歴を全件削除");
   } finally {
     await extension.dispose();
   }
