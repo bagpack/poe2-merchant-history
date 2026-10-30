@@ -2,7 +2,7 @@
   "name": "poe2merchanthistory",
   "private": true,
   "type": "module",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "scripts": {
     "lint:eslint": "eslint playwright.config.js src/**/*.ts tests/**/*.js",
     "lint:style": "stylelint public/**/*.css",
