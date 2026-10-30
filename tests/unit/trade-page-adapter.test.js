@@ -11,6 +11,26 @@ test("trade search ID is read from locale-independent poe2 URLs", () => {
     readTradeSearchId("https://www.pathofexile.com/trade2/search/poe2/Runes%20of%20Aldur/search_1"),
     "search_1"
   );
+  const encodedSearchState = `H4sI${"A".repeat(136)}AAAA`;
+  strictEqual(
+    readTradeSearchId(
+      `https://jp.pathofexile.com/trade2/search/poe2/Runes%20of%20Aldur/${encodedSearchState}`
+    ),
+    encodedSearchState
+  );
+  const longSearchState = `H4sI${"A".repeat(8192)}`;
+  strictEqual(
+    readTradeSearchId(`https://www.pathofexile.com/trade2/search/poe2/Standard/${longSearchState}`),
+    longSearchState
+  );
+  strictEqual(
+    readTradeSearchId("https://www.pathofexile.com/trade2/search/poe2/Standard/search_1/live"),
+    "search_1"
+  );
+  strictEqual(
+    readTradeSearchId("https://www.pathofexile.com/trade2/search/poe2/Standard/search_1/other"),
+    null
+  );
   strictEqual(readTradeSearchId("https://example.test/trade2/search/poe2/Standard/id"), null);
   strictEqual(
     readTradeSearchId("https://www.pathofexile.com/trade2/search/poe1/Standard/id"),

@@ -3,6 +3,7 @@ import { parseSearchResponse } from "./trade-api-adapter.js";
 import type { NetworkRecoveryRequestMessage } from "./types.js";
 
 const NETWORK_CHANNEL = "poe2-purchase-history/network/v1" as const;
+const TRADE_SEARCH_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const recoveryRequests = new Set<string>();
 const initialFetch = window.fetch;
 
@@ -26,9 +27,16 @@ window.addEventListener("message", (event: MessageEvent<unknown>) => {
   fetchUrl.searchParams.set("query", searchId);
   fetchUrl.searchParams.set("realm", "poe2");
 
-  void Reflect.apply(initialFetch, window, [fetchUrl, { credentials: "same-origin" }])
+  void Reflect.apply(initialFetch, window, [
+    fetchUrl,
+    {
+      credentials: "same-origin",
+      headers: { accept: "application/json", "x-requested-with": "XMLHttpRequest" },
+    },
+  ])
     .then(async (response) => {
       if (!response.ok) {
+        console.warn(`[PoE2 Purchase History] Item recovery failed with HTTP ${response.status}.`);
         return;
       }
 
@@ -36,9 +44,14 @@ window.addEventListener("message", (event: MessageEvent<unknown>) => {
         fetchUrl: fetchUrl.href,
         capturedAt: Date.now(),
       }).filter((item) => item.itemId === itemId || item.resultId === itemId);
+      if (items.length === 0) {
+        console.warn("[PoE2 Purchase History] The clicked item was not in the recovery response.");
+      }
       postCapturedItems(items);
     })
-    .catch(() => undefined)
+    .catch(() => {
+      console.warn("[PoE2 Purchase History] Item recovery request failed.");
+    })
     .finally(() => recoveryRequests.delete(itemId));
 });
 
@@ -68,7 +81,7 @@ function parseRecoveryRequest(value: unknown): NetworkRecoveryRequestMessage | n
     typeof payload.itemId !== "string" ||
     !/^[a-f0-9]{64}$/.test(payload.itemId) ||
     typeof payload.searchId !== "string" ||
-    !/^[A-Za-z0-9_-]{1,128}$/.test(payload.searchId)
+    !TRADE_SEARCH_ID_PATTERN.test(payload.searchId)
   ) {
     return null;
   }

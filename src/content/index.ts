@@ -77,8 +77,15 @@ function findCachedItem(correlationId: string): CapturedItem | null {
 }
 
 function requestItemRecovery(itemId: string, pageUrl: string): void {
+  if (!/^[a-f0-9]{64}$/.test(itemId)) {
+    console.warn("[PoE2 Purchase History] The clicked row ID is not a trade result ID.");
+    return;
+  }
   const searchId = readTradeSearchId(pageUrl);
-  if (!/^[a-f0-9]{64}$/.test(itemId) || !searchId) {
+  if (!searchId) {
+    console.warn(
+      "[PoE2 Purchase History] The trade search ID could not be read from the page URL."
+    );
     return;
   }
 

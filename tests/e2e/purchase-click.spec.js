@@ -257,3 +257,92 @@ test("a trusted click recovers the item when the search response was missed", as
     await extension.dispose();
   }
 });
+
+test("an instant-buyout click during live search saves the item", async () => {
+  const extension = await launchExtensionContext();
+
+  try {
+    await extension.context.route(
+      `https://www.pathofexile.com/trade2/search/poe2/Standard/${RECOVERY_SEARCH_ID}/live`,
+      (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "text/html",
+          body: `
+            <div class="row" data-id="${RECOVERED_ITEM_ID}">
+              <span data-field="fee">100</span>
+              <button id="live-purchase" class="direct-btn">Instant purchase</button>
+            </div>
+          `,
+        })
+    );
+    await extension.context.route(
+      new RegExp(`https://www\\.pathofexile\\.com/api/trade2/fetch/${RECOVERED_ITEM_ID}\\?.+`),
+      (route) => {
+        const url = new URL(route.request().url());
+        expect(url.searchParams.get("query")).toBe(RECOVERY_SEARCH_ID);
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          json: RECOVERY_RESPONSE,
+        });
+      }
+    );
+
+    const tradePage = await extension.context.newPage();
+    await tradePage.goto(
+      `https://www.pathofexile.com/trade2/search/poe2/Standard/${RECOVERY_SEARCH_ID}/live`
+    );
+    await tradePage.locator("#live-purchase").click();
+
+    const extensionPage = await extension.context.newPage();
+    await extensionPage.goto(`chrome-extension://${extension.extensionId}/popup.html`);
+    await expect(extensionPage.locator("#purchase-pending-count")).toHaveText("1");
+  } finally {
+    await extension.dispose();
+  }
+});
+
+test("an instant-buyout click on a filtered search URL saves the item", async () => {
+  const extension = await launchExtensionContext();
+  const encodedSearchState =
+    "H4sIAAAAAAAAEyXJwQnAIAwF0F3-uXSArFKKpJqCIEZMPBRx90J7eoc3Yc4-DDShzbNWEEzi6HwVwdq-N9Ax4U8TELgmbLhzcel_5ARCMxlJ95_g6lxC1JJCF8vmXKNgnetcL_DL0HxzAAAA";
+  const pageUrl = `https://jp.pathofexile.com/trade2/search/poe2/Runes%20of%20Aldur/${encodedSearchState}`;
+
+  try {
+    await extension.context.route(pageUrl, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: `
+          <div class="row" data-id="${RECOVERED_ITEM_ID}">
+            <span data-field="fee">100</span>
+            <button id="filtered-purchase" class="btn btn-xs btn-default direct-btn">隠れ家に移動する</button>
+          </div>
+        `,
+      })
+    );
+    await extension.context.route(
+      new RegExp(`https://jp\\.pathofexile\\.com/api/trade2/fetch/${RECOVERED_ITEM_ID}\\?.+`),
+      (route) => {
+        const url = new URL(route.request().url());
+        expect(url.searchParams.get("query")).toBe(encodedSearchState);
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          json: RECOVERY_RESPONSE,
+        });
+      }
+    );
+
+    const tradePage = await extension.context.newPage();
+    await tradePage.goto(pageUrl);
+    await tradePage.locator("#filtered-purchase").click();
+
+    const extensionPage = await extension.context.newPage();
+    await extensionPage.goto(`chrome-extension://${extension.extensionId}/popup.html`);
+    await expect(extensionPage.locator("#purchase-pending-count")).toHaveText("1");
+  } finally {
+    await extension.dispose();
+  }
+});
